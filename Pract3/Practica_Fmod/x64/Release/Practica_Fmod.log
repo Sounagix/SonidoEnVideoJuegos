@@ -1,0 +1,2 @@
+﻿  main.cpp
+G:\4to\SONIDO\Practicas\Pract3\Practica_Fmod\main.cpp(67,11): error C4996: 'getch': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _getch. See online help for details.
