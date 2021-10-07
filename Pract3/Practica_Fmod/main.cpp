@@ -1,18 +1,39 @@
-#include <fmod.hpp>
+﻿#include <fmod.hpp>
 #include <fmod_errors.h>
 #include <iostream>
 #include <thread>
 #include <cstdio>
 #include <conio.h>
+#include <math.h>
+#include <chrono>
+#include <ctime>   
+#include "Source.h"
+#include <vector>
+#include <iomanip>
+
+#pragma warning(disable : 4996)
+#define KEY_UP 72
+#define KEY_DOWN 80
+#define KEY_LEFT 75
+#define KEY_RIGHT 77
+#define EXIT 27
+#define ENTER 13		
+#define ADD 43			
+#define SUB 45			
+
 
 using namespace FMOD;
-System * syst;
+System* syst;
+
+class BaseSound;
 
 
-enum Fmod_Tipo : int
-{
-	F2D = 0, F3D
-};
+
+
+std::vector<BaseSound*> playList;
+int selectionH = 0;
+int selectionV = 0;
+
 
 void ERRCHECK(FMOD_RESULT result)
 {
@@ -32,38 +53,252 @@ void init(FMOD_RESULT res) {
 	}
 }
 
-
+//	Sonido base para cualquier sonido que se quiera crear
 class BaseSound {
-private:
+protected:
 	//	Sonido a reproducir
 	Sound* sonido;
 	//	Canal para reproducir
 	Channel* canal;
+	//	Nombre del sonido
+	std::string nombre;
+	//	frame rate
+	float timeRate = 0.0f;
+	//	tiempo actual
+	float currTime = 0.0f;
+
 public:
 	//	Constructor generico
-	BaseSound(const char* ruta, int loop, Fmod_Tipo tipo) {
-		FMOD_RESULT res;
-		if(tipo == F2D)
-			res = syst->createSound(ruta, FMOD_DEFAULT, 0, &sonido);
-		else 
-			res = syst->createSound(ruta, FMOD_3D, 0, &sonido);
+	BaseSound() {};
 
-		std::cout << "Sonido creado \n";
-		ERRCHECK(res);
-		canal->setLoopCount(loop);
-	}
 	//	Destructor generico
 	~BaseSound() {
+		std::cout << "Base\n";
 		sonido->release();
 	}
-	//	Reproduce un sound y si loop es -1 se reproduce en loop
-	void play(int loop = 1) {
+
+	//	Reproduce un sound 
+	void play() {
 		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
 		ERRCHECK(res);
-		canal->setLoopCount(loop);
+	}
+
+	// Reproduce un sound y si loop es -1 se reproduce en loop
+	void playLoop() {
+		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
+		canal->setLoopCount(-1);
+		ERRCHECK(res);
+	}
+
+	//	Setea a un canal como pausa o no en función de un booleano
+	void setPause(bool status) {
+		canal->setPaused(status);
+	}
+
+	//	Cambia el volumen de un sonido *TODO
+	void setVolume(float v) {
+		canal->setVolume(v);
+	}
+
+	//	Cambia el estado de un canal a mute en función de un bool
+	void setMute(bool status) {
+		canal->setMute(status);
+	}
+
+	//	Cambia el pitch de un canal en función de un valor(float) -> para devolver a un pitch normal -> 1.0f
+	void setPitch(float value) {
+		canal->setPitch(value);
+	}
+
+	//	Cambia el frame rate de un sonido
+	void setFrameRate(float value) {
+		timeRate = value;
+	}
+
+	virtual void update(float deltaTime) = 0;
+
+	//	Determina si un sonido se está reproduciendo
+	bool isPlaying() {
+		bool active;
+		canal->isPlaying(&active);
+		return active;
+	}
+
+	// Devuelve el nombre del sonido
+	std::string getName() {
+		return nombre;
+	}
+
+	virtual float getEfect(Source::EffectId e) {
+		switch (e)
+		{
+		case Source::EffectId::Pitch: 
+		{
+			float p;
+			canal->getPitch(&p);
+			return p;
+		}
+		case Source::EffectId::Volumen:
+		{
+			float p;
+			canal->getVolume(&p);
+			return p;
+		}
+		default:
+			break;
+		}
+	}
+
+	virtual void modEfect(Source::EffectId e, float value) {
+		switch (e)
+		{
+		case Source::EffectId::Pitch:
+		{
+			float p;
+			canal->getPitch(&p);
+			p += value;
+			canal->setPitch(p);
+			break;
+		}
+		case Source::EffectId::Volumen:
+		{
+			float v;
+			canal->getVolume(&v);
+			v += value;
+			canal->setVolume(v);
+			break;
+		}
+		default:
+			break;
+		}
+	}
+};
+
+class Sound3D : public BaseSound {
+public:
+	Sound3D(const char* ruta, std::string n = "undefined", unsigned int dist = 5) {
+		nombre = n;
+		FMOD_RESULT res;
+		res = syst->createSound(ruta, FMOD_3D, 0, &sonido);
+		ERRCHECK(res);
+		canal->setLoopCount(0);
+		canal->setPosition(dist, FMOD_TIMEUNIT_MS);
+	}
+
+	virtual ~Sound3D() {
+		std::cout << "3D\n";
+	}
+
+	virtual void update(float deltaTime) override {
+		currTime += deltaTime;
+		if (currTime >= timeRate)
+			play();
+	};
+
+	//	Setea una posición a un sonido 3d
+	void setPosition(unsigned int p) {
+		canal->setPosition(p, FMOD_TIMEUNIT_MS);
 	}
 
 };
+
+class Sound2D : public BaseSound {
+public:
+	Sound2D(const char* ruta, std::string n = "undefined", bool loop = false) {
+		nombre = n;
+		FMOD_RESULT res;
+		if (loop)
+			res = syst->createSound(ruta, FMOD_LOOP_NORMAL, 0, &sonido);
+		else
+			res = syst->createSound(ruta, FMOD_2D, 0, &sonido);
+
+		ERRCHECK(res);
+	}
+	virtual ~Sound2D() {
+		std::cout << "2D\n";
+	};
+
+	virtual void update(float deltaTime) override {};
+
+};
+
+
+void grafica() {
+	system("CLS");
+	std::cout << "Sonidos cargados " << playList.size() << std::endl;
+	int s = playList.size();
+	for (int i = 0; i < s; i++) {
+		if (i == selectionV)
+			std::cout << ">" << playList.at(i)->getName() << "\n";
+		else
+			std::cout << playList.at(i)->getName() << "\n";
+	}
+
+	std::cout << "\n\n\n\n";
+	for (size_t i = 0; i < Source::efectos.size(); i++)
+	{
+		if (i == selectionH)
+			std::cout << ">" << Source::efectos[i].name << "   ";
+		else
+			std::cout << Source::efectos[i].name << "   ";
+		
+	}
+	std::cout << "\n\n";
+}
+
+void muestraEfecto() {
+
+	grafica();
+	switch (Source::efectos[selectionH].effect)
+	{
+	case Source::EffectId::Pitch: {
+
+		float pot = playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
+		if (pot > 100.0f)
+			pot = 1.0f;
+		else if (pot <= 0)
+			pot = 0;
+		std::cout << (pot) / 100.0f;
+	
+		break;
+	}
+	case Source::EffectId::Volumen: {
+		float pot = playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
+		if (pot > 1.0f)
+			pot = 1.0f;
+		else if (pot <= 0)
+			pot = 0;
+		//std::cout << (pot - 0) / 1.0f;
+		int norm = pot * 10;
+		/*std::cout << ">" << std::setfill('-') << std::setw(norm);*/
+		std::cout << std::setfill('x') << std::setw(norm);
+		std::cout << norm << std::endl;
+		break;
+	}
+	default:
+		break;
+	}
+	//std::cout << playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
+}
+
+void modificaEfecto(float value) 
+{
+	switch (Source::efectos[selectionH].effect)
+	{
+	case Source::EffectId::Pitch: {
+		playList.at(selectionV)->modEfect(Source::efectos[selectionH].effect, value * 0.5f);
+		break;
+	}
+	case Source::EffectId::Volumen: {
+		playList.at(selectionV)->modEfect(Source::efectos[selectionH].effect, value * 0.1f);
+		break;
+	}
+	default:
+		break;
+	}
+	muestraEfecto();
+}
+
 
 
 int main() {
@@ -76,27 +311,140 @@ int main() {
 		res = syst->init(128, FMOD_INIT_NORMAL, 0);
 		ERRCHECK(res);
 	}
-	
-	BaseSound* battle = new BaseSound("../muestras/Battle.wav", -1, F2D);
-	BaseSound* gun1 = new BaseSound("../muestras/Gun1.wav", 1, F3D);
-	BaseSound* gun2 = new BaseSound("../muestras/Gun2.wav", 1, F3D);
 
-	
+
+#pragma region Apartado1
+	//Sound2D* battle = new Sound2D(Source::sonidos[Source::Battle].ruta.c_str());
+	//Sound3D* gun1 = new Sound3D(Source::sonidos[Source::Gun1].ruta.c_str());
+	//Sound3D* gun2 = new Sound3D(Source::sonidos[Source::Gun2].ruta.c_str());
+	//battle->playLoop();
+
+	//bool run = true;
+	//char tecla;
+	//std::time_t t = std::time(0);   
+	//std::tm* now = std::localtime(&t);
+
+
+	//double randomTime = rand() % 10;
+	//int timeToPlay = randomTime;
+	//int currSec = 0;
+	//int tmc = 0;
+	//while (run)
+	//{
+	//	t = std::time(0); 
+	//	now = std::localtime(&t);
+	//	if (now->tm_sec > tmc) {
+	//		currSec++;
+	//		tmc = now->tm_sec;
+	//	}
+
+	//	if (currSec >= timeToPlay) {
+	//		int rnd = rand() % 2;
+	//		if (rnd == 0) {
+	//			gun1->play();
+	//			gun1->setPosition(rand() % 500);
+	//		}
+	//		else {
+	//			gun2->play();
+	//			gun2->setPosition(rand() % 500);
+	//		}
+
+	//		t = std::time(0);
+	//		randomTime = rand() % 10;
+	//		timeToPlay = randomTime;
+	//		currSec = 0;
+	//	}
+
+	//	syst->update();
+
+	//	if (_kbhit()) {
+	//		tecla = _getch();
+	//		std::cout << tecla << std::endl;
+	//		run = !(tecla == 'q');
+	//	}
+	//}
+#pragma endregion
+
+#pragma region Apartado2
+	Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].name, true);
+	playList.push_back(motor);
+	motor->playLoop();
+
+	Sound3D* gun1 = new Sound3D(Source::sonidos[Source::Gun1].ruta.c_str());
+	playList.push_back(gun1);
+
 
 	bool run = true;
-	char tecla;
-	while (run) 
-	{
-		battle->play();
-		gun1->play();
-		gun2->play();
-		syst->update();
+	char tecla = ' ';
+	grafica();
 
-		tecla = _getch();
-		run = !(tecla == 1);
+	int c = 0;
+	while (run)
+	{
+		switch ((c = getch()))
+		{
+		case KEY_DOWN:
+		{
+			selectionV += 1;
+			if (selectionV >= playList.size())
+				selectionV = 0;
+			grafica();
+			break;
+		}
+		case KEY_UP:
+		{
+			selectionV -= 1;
+			if (selectionV < 0)
+				selectionV = playList.size() - 1;
+			grafica();
+			break;
+		}
+		case KEY_LEFT:
+		{
+			selectionH -= 1;
+			if (selectionH < 0)
+				selectionH = Source::efectos.size() - 1;
+			grafica();
+			break;
+		}
+		case KEY_RIGHT:
+		{
+			selectionH += 1;
+			if (selectionH >= Source::efectos.size())
+				selectionH = 0;
+			grafica();
+			break;
+		}
+		case ENTER:
+		{
+			muestraEfecto();
+			break;
+		}
+		case ADD:
+		{
+			modificaEfecto(1.0f);
+			break;
+		}
+		case SUB:
+		{
+			modificaEfecto(-1.0);
+			break;
+		}
+		case EXIT:
+		{
+			run = false;
+			break;
+		}
+		default:
+			std::cout << c << std::endl;
+			break;
+		}
+		syst->update();
 	}
-	
+#pragma endregion
+
 	FMOD_RESULT res = syst->release();
 	ERRCHECK(res);
+	system("PAUSE");
 	return 0;
 }
