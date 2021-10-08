@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ﻿  main.cpp
 G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(312,25): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
 G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(355,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
@@ -7,6 +6,3 @@ G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(415,36
 G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(422,43): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
 G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(189): warning C4715: 'BaseSound::getEfect': no todas las rutas de acceso de control devuelven un valor
   Practica_Fmod.vcxproj -> G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Exes\Practica_Fmod.exe
-=======
-﻿  Practica_Fmod.vcxproj -> C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Exes\Practica_Fmod.exe
->>>>>>> main
