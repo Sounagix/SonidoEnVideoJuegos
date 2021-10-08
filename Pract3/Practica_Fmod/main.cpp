@@ -44,13 +44,6 @@ enum dir {
 	right,
 };
 
-// Determina el tipo de Loop con el metodo
-enum loop {
-	freeLoop = -1,	// loop indefinido, por defecto es el argumento inicializado en función playLoop(int l = -1)
-	OnceLoop = 0,	// se reproduce una sola vez	
-	ThreeLoop = 2	// se reproduce 3 veces
-};
-
 struct distance
 {
 	dir d;
@@ -122,10 +115,9 @@ public:
 	}
 
 	// Reproduce un sound y si loop es -1 se reproduce en loop
-	// Utiliza el enum loop para gestionar el tipo de loop
-	void playLoop(int l = -1) {
+	void playLoop() {
 		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
-		canal->setLoopCount(l);
+		canal->setLoopCount(-1);
 		ERRCHECK(res);
 	}
 
