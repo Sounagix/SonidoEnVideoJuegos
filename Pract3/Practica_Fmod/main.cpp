@@ -234,7 +234,8 @@ public:
 			up = { 0,1,0 },				// vector up: hacia la ``coronilla''
 			at = { 1,0,0 };				// vector at: hacia donde mira
 		// colocamos listener
-		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+
 		playList.push_back(this);
 	}
 
@@ -545,7 +546,7 @@ int main() {
 #pragma endregion
 
 #pragma region Apartado2
-	/*Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].name, true);
+	Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].nombre, true);
 	playList.push_back(motor);
 	motor->playLoop();
 
@@ -619,28 +620,29 @@ int main() {
 			break;
 		}
 		syst->update();
-	}*/
+	}
 #pragma endregion
 
 #pragma region Apartado3
 
-	std::vector<Comp> s = {
-		Comp{Source::FootStep, true, soundType::sound3D}
-	};
-	cargaSonidos(s);
+	//std::vector<Comp> s = {
+	//	Comp{Source::FootStep, true, soundType::sound3D}
+	//};
+	//cargaSonidos(s);
 
-	//playList.front()->playLoop();
-	grafica();
+	////playList.front()->playLoop();
+	//grafica();
 
-	bool run = true;
-	while (run)
-	{
-		if (_kbhit()) {
-			int c;
-			run = gestionaTeclas((c = getch()));
-		}
-		syst->update();
-	}
+	//
+	//bool run = true;
+	//while (run)
+	//{
+	//	if (_kbhit()) {
+	//		int c;
+	//		run = gestionaTeclas((c = getch()));
+	//	}
+	//	syst->update();
+	//}
 #pragma endregion
 
 #pragma region Apartado4
