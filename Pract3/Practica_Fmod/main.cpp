@@ -121,6 +121,23 @@ public:
 		ERRCHECK(res);
 	}
 
+<<<<<<< HEAD
+=======
+	// Reproduce un sound en un solo loop
+	void playOneLoop() {
+		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
+		canal->setLoopCount(0);
+		ERRCHECK(res);
+	}
+
+	// Reproduce un sound en Loop 3 veces
+	void playThreeLoop() {
+		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
+		canal->setLoopCount(2);
+		ERRCHECK(res);
+	}
+
+>>>>>>> main
 	//	Setea a un canal como pausa o no en función de un booleano
 	void setPause(bool status) {
 		canal->setPaused(status);
@@ -252,6 +269,7 @@ public:
 	//	Setea una posición a un sonido 3d
 	void setPosition(distance d) {
 		FMOD_VECTOR
+<<<<<<< HEAD
 			pos,
 			vel,
 			forw,
@@ -272,13 +290,22 @@ public:
 		// colocamos listener
 
 		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+=======
+			pos = { d.x,d.y,d.z },
+			vel = { 1.0f,1.0f,1.0f };
+		canal->set3DAttributes(&pos,&vel);
+>>>>>>> main
 	}
 
 	FMOD_VECTOR getPosition() {
 		FMOD_VECTOR
 			pos,
 			vel;
+<<<<<<< HEAD
 		canal->get3DAttributes(&pos, &vel);
+=======
+		canal->get3DAttributes(&pos,&vel);
+>>>>>>> main
 		return pos;
 	}
 
@@ -358,7 +385,11 @@ void muestraEfecto() {
 		std::cout << norm << std::endl;
 		break;
 	}
+<<<<<<< HEAD
 	case Source::EffectId::Movement: { // TODO*
+=======
+	case Source::EffectId::Movement: {
+>>>>>>> main
 		float pot = playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
 		if (pot > 1.0f)
 			pot = 1.0f;
@@ -402,34 +433,55 @@ void modificaEfecto(float value, distance* d = nullptr)
 bool gestionaTeclas(int c) {
 	switch (c)
 	{
+<<<<<<< HEAD
 	case KEY_DOWN: {
+=======
+	case KEY_DOWN:
+	{
+>>>>>>> main
 		selectionV += 1;
 		if (selectionV >= playList.size())
 			selectionV = 0;
 		grafica();
 		break;
 	}
+<<<<<<< HEAD
 	case KEY_UP: {
+=======
+	case KEY_UP:
+	{
+>>>>>>> main
 		selectionV -= 1;
 		if (selectionV < 0)
 			selectionV = playList.size() - 1;
 		grafica();
 		break;
 	}
+<<<<<<< HEAD
 	case KEY_LEFT: {
+=======
+	case KEY_LEFT:
+	{
+>>>>>>> main
 		selectionH -= 1;
 		if (selectionH < 0)
 			selectionH = Source::efectos.size() - 1;
 		grafica();
 		break;
 	}
+<<<<<<< HEAD
 	case KEY_RIGHT: {
+=======
+	case KEY_RIGHT:
+	{
+>>>>>>> main
 		selectionH += 1;
 		if (selectionH >= Source::efectos.size())
 			selectionH = 0;
 		grafica();
 		break;
 	}
+<<<<<<< HEAD
 	case ENTER: {
 		muestraEfecto();
 		break;
@@ -475,12 +527,39 @@ bool gestionaTeclas(int c) {
 		if (selectionH == 2) {
 			distance forward = {
 				dir::left,0.0f, 0.0f,-1.0f
+=======
+	case ENTER:
+	{
+		muestraEfecto();
+		break;
+	}
+	case ADD:
+	{
+		modificaEfecto(1.0f);
+		break;
+	}
+	case SUB:
+	{
+		modificaEfecto(-1.0);
+		break;
+	}
+	case W:
+	{
+		if (selectionH == 2) {
+			distance forward = {
+				dir::right, 0.0f, 1.0f,0.0f
+>>>>>>> main
 			};
 			modificaEfecto(0, &forward);
 		}
 		break;
 	}
+<<<<<<< HEAD
 	case EXIT: {
+=======
+	case EXIT:
+	{
+>>>>>>> main
 		std::cout << "\n";
 		return false;
 		break;
@@ -583,7 +662,11 @@ int main() {
 #pragma endregion
 
 #pragma region Apartado2
+<<<<<<< HEAD
 	/*Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].name, true);
+=======
+	Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].nombre, true);
+>>>>>>> main
 	playList.push_back(motor);
 	motor->playLoop();
 
@@ -657,11 +740,16 @@ int main() {
 			break;
 		}
 		syst->update();
+<<<<<<< HEAD
 	}*/
+=======
+	}
+>>>>>>> main
 #pragma endregion
 
 #pragma region Apartado3
 
+<<<<<<< HEAD
 	std::vector<Comp> s = {
 		Comp{Source::FootStep, true, soundType::sound3D},
 	};
@@ -678,6 +766,26 @@ int main() {
 		}
 		syst->update();
 	}
+=======
+	//std::vector<Comp> s = {
+	//	Comp{Source::FootStep, true, soundType::sound3D}
+	//};
+	//cargaSonidos(s);
+
+	////playList.front()->playLoop();
+	//grafica();
+
+	//
+	//bool run = true;
+	//while (run)
+	//{
+	//	if (_kbhit()) {
+	//		int c;
+	//		run = gestionaTeclas((c = getch()));
+	//	}
+	//	syst->update();
+	//}
+>>>>>>> main
 #pragma endregion
 
 #pragma region Apartado4
@@ -685,6 +793,10 @@ int main() {
 #pragma endregion
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
 	FMOD_RESULT res = syst->release();
 	ERRCHECK(res);
 	system("PAUSE");
