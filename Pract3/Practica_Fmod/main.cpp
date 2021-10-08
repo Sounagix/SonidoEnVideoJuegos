@@ -121,6 +121,20 @@ public:
 		ERRCHECK(res);
 	}
 
+	// Reproduce un sound en un solo loop
+	void playOneLoop() {
+		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
+		canal->setLoopCount(0);
+		ERRCHECK(res);
+	}
+
+	// Reproduce un sound en Loop 3 veces
+	void playThreeLoop() {
+		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
+		canal->setLoopCount(2);
+		ERRCHECK(res);
+	}
+
 	//	Setea a un canal como pausa o no en función de un booleano
 	void setPause(bool status) {
 		canal->setPaused(status);
