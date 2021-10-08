@@ -44,6 +44,13 @@ enum dir {
 	right,
 };
 
+// Determina el tipo de Loop con el metodo
+enum loop {
+	freeLoop = -1,	// loop indefinido, por defecto es el argumento inicializado en función playLoop(int l = -1)
+	OnceLoop = 0,	// se reproduce una sola vez	
+	ThreeLoop = 2	// se reproduce 3 veces
+};
+
 struct distance
 {
 	dir d;
@@ -115,9 +122,10 @@ public:
 	}
 
 	// Reproduce un sound y si loop es -1 se reproduce en loop
-	void playLoop() {
+	// Utiliza el enum loop para gestionar el tipo de loop
+	void playLoop(int l = -1) {
 		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
-		canal->setLoopCount(-1);
+		canal->setLoopCount(l);
 		ERRCHECK(res);
 	}
 
@@ -516,8 +524,10 @@ void cargaSonidos(const std::vector<Comp> s) {
 	}
 }
 
-
-
+double randMToN(double M, double N)
+{
+	return M + (rand() / (RAND_MAX / (N - M)));
+}
 int main() {
 
 	if (syst == NULL) {
@@ -662,16 +672,64 @@ int main() {
 
 #pragma region Apartado3
 
+	//std::vector<Comp> s = {
+	//	Comp{Source::FootStep, true, soundType::sound3D},
+	//};
+	//cargaSonidos(s);
+
+	//grafica();
+
+	//bool run = true;
+	//while (run)
+	//{
+	//	if (_kbhit()) {
+	//		int c;
+	//		run = gestionaTeclas((c = getch()));
+	//	}
+	//	syst->update();
+	//}
+#pragma endregion
+
+#pragma region Apartado4
 	std::vector<Comp> s = {
-		Comp{Source::FootStep, true, soundType::sound3D},
+			Comp{Source::RifleMod01, false, soundType::sound2D},
+			Comp{Source::RifleMod02, false, soundType::sound2D},
+			Comp{Source::RifleMod03, false, soundType::sound2D},
+			Comp{Source::RifleMod04, false, soundType::sound2D},
 	};
 	cargaSonidos(s);
 
 	grafica();
 
+	std::time_t t = std::time(0);   
+	std::tm* now = std::localtime(&t);
+
+	double randomTime = rand() % 10;
+	int timeToPlay = randomTime;
+	int currSec = 0;
+	int tmc = 0;
+
 	bool run = true;
 	while (run)
 	{
+		t = std::time(0); 
+		now = std::localtime(&t);
+
+		if (now->tm_sec > tmc) {
+			currSec++;
+			tmc = now->tm_sec;
+		}
+		if (currSec >= timeToPlay) {
+			int rnd = rand() % 4;
+			playList[rnd]->setPitch(randMToN(0.01f, 100.0f));
+			playList[rnd]->play();
+			t = std::time(0);
+			randomTime = rand() % (4-1);
+
+			timeToPlay = randomTime;
+			currSec = 0;
+		}
+
 		if (_kbhit()) {
 			int c;
 			run = gestionaTeclas((c = getch()));
@@ -680,9 +738,11 @@ int main() {
 	}
 #pragma endregion
 
-#pragma region Apartado4
+#pragma region Apartado5
 
 #pragma endregion
+
+
 
 
 	FMOD_RESULT res = syst->release();

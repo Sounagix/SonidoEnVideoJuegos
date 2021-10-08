@@ -13,6 +13,10 @@ public:
 		Motor,
 		Piano,
 		Rifle,
+		RifleMod01,
+		RifleMod02,
+		RifleMod03,
+		RifleMod04,
 		Scooter,
 		Talking,
 		Size
