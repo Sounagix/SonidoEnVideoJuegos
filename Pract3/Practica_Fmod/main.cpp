@@ -44,6 +44,13 @@ enum dir {
 	right,
 };
 
+// Determina el tipo de Loop con el metodo
+enum loop {
+	freeLoop = -1,	// loop indefinido, por defecto es el argumento inicializado en función playLoop(int l = -1)
+	OnceLoop = 0,	// se reproduce una sola vez	
+	ThreeLoop = 2	// se reproduce 3 veces
+};
+
 struct distance
 {
 	dir d;
@@ -115,23 +122,10 @@ public:
 	}
 
 	// Reproduce un sound y si loop es -1 se reproduce en loop
-	void playLoop() {
+	// Utiliza el enum loop para gestionar el tipo de loop
+	void playLoop(int l = -1) {
 		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
-		canal->setLoopCount(-1);
-		ERRCHECK(res);
-	}
-
-	// Reproduce un sound en un solo loop
-	void playOneLoop() {
-		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
-		canal->setLoopCount(0);
-		ERRCHECK(res);
-	}
-
-	// Reproduce un sound en Loop 3 veces
-	void playThreeLoop() {
-		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
-		canal->setLoopCount(2);
+		canal->setLoopCount(l);
 		ERRCHECK(res);
 	}
 
@@ -266,16 +260,33 @@ public:
 	//	Setea una posición a un sonido 3d
 	void setPosition(distance d) {
 		FMOD_VECTOR
-			pos = { d.x,d.y,d.z },
-			vel = { 1.0f,1.0f,1.0f };
-		canal->set3DAttributes(&pos,&vel);
+			pos,
+			vel,
+			forw,
+			upD;
+
+		syst->get3DListenerAttributes(0, &pos, &vel, &forw, &upD);
+
+		d.x += pos.x;
+		d.y += pos.y;
+		d.z += pos.z;
+
+
+		FMOD_VECTOR
+			listenerPos = { d.x,d.y,d.z },// posicion del listener
+			listenerVel = { 0,0,0 },		// velocidad del listener
+			up = { 0,1,0 },					// vector up: hacia la ``coronilla''
+			at = { 1,0,0 };					// vector at: hacia donde mira
+		// colocamos listener
+
+		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
 	}
 
 	FMOD_VECTOR getPosition() {
 		FMOD_VECTOR
 			pos,
 			vel;
-		canal->get3DAttributes(&pos,&vel);
+		canal->get3DAttributes(&pos, &vel);
 		return pos;
 	}
 
@@ -355,7 +366,7 @@ void muestraEfecto() {
 		std::cout << norm << std::endl;
 		break;
 	}
-	case Source::EffectId::Movement: {
+	case Source::EffectId::Movement: { // TODO*
 		float pot = playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
 		if (pot > 1.0f)
 			pot = 1.0f;
@@ -399,65 +410,85 @@ void modificaEfecto(float value, distance* d = nullptr)
 bool gestionaTeclas(int c) {
 	switch (c)
 	{
-	case KEY_DOWN:
-	{
+	case KEY_DOWN: {
 		selectionV += 1;
 		if (selectionV >= playList.size())
 			selectionV = 0;
 		grafica();
 		break;
 	}
-	case KEY_UP:
-	{
+	case KEY_UP: {
 		selectionV -= 1;
 		if (selectionV < 0)
 			selectionV = playList.size() - 1;
 		grafica();
 		break;
 	}
-	case KEY_LEFT:
-	{
+	case KEY_LEFT: {
 		selectionH -= 1;
 		if (selectionH < 0)
 			selectionH = Source::efectos.size() - 1;
 		grafica();
 		break;
 	}
-	case KEY_RIGHT:
-	{
+	case KEY_RIGHT: {
 		selectionH += 1;
 		if (selectionH >= Source::efectos.size())
 			selectionH = 0;
 		grafica();
 		break;
 	}
-	case ENTER:
-	{
+	case ENTER: {
 		muestraEfecto();
 		break;
 	}
-	case ADD:
-	{
-		modificaEfecto(1.0f);
+	case ADD: {
+		if (selectionH != 2)
+			modificaEfecto(1.0f);
 		break;
 	}
-	case SUB:
-	{
-		modificaEfecto(-1.0);
+	case SUB: {
+		if (selectionH != 2)
+			modificaEfecto(-1.0);
 		break;
 	}
-	case W:
-	{
+	case W: {
 		if (selectionH == 2) {
 			distance forward = {
-				dir::right, 0.0f, 1.0f,0.0f
+				dir::right, 1.0f, 0.0f, 0.0f
 			};
 			modificaEfecto(0, &forward);
 		}
 		break;
 	}
-	case EXIT:
-	{
+	case A: {
+		if (selectionH == 2) {
+			distance forward = {
+				dir::left,0.0f, 0.0f,1.0f
+			};
+			modificaEfecto(0, &forward);
+		}
+		break;
+	}
+	case S: {
+		if (selectionH == 2) {
+			distance forward = {
+				dir::left,-1.0f, 0.0f,0.0f
+			};
+			modificaEfecto(0, &forward);
+		}
+		break;
+	}
+	case D: {
+		if (selectionH == 2) {
+			distance forward = {
+				dir::left,0.0f, 0.0f,-1.0f
+			};
+			modificaEfecto(0, &forward);
+		}
+		break;
+	}
+	case EXIT: {
 		std::cout << "\n";
 		return false;
 		break;
@@ -560,7 +591,7 @@ int main() {
 #pragma endregion
 
 #pragma region Apartado2
-	Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].nombre, true);
+	/*Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].name, true);
 	playList.push_back(motor);
 	motor->playLoop();
 
@@ -634,35 +665,32 @@ int main() {
 			break;
 		}
 		syst->update();
-	}
+	}*/
 #pragma endregion
 
 #pragma region Apartado3
 
-	//std::vector<Comp> s = {
-	//	Comp{Source::FootStep, true, soundType::sound3D}
-	//};
-	//cargaSonidos(s);
+	std::vector<Comp> s = {
+		Comp{Source::FootStep, true, soundType::sound3D},
+	};
+	cargaSonidos(s);
 
-	////playList.front()->playLoop();
-	//grafica();
+	grafica();
 
-	//
-	//bool run = true;
-	//while (run)
-	//{
-	//	if (_kbhit()) {
-	//		int c;
-	//		run = gestionaTeclas((c = getch()));
-	//	}
-	//	syst->update();
-	//}
+	bool run = true;
+	while (run)
+	{
+		if (_kbhit()) {
+			int c;
+			run = gestionaTeclas((c = getch()));
+		}
+		syst->update();
+	}
 #pragma endregion
 
 #pragma region Apartado4
 
 #pragma endregion
-
 
 
 	FMOD_RESULT res = syst->release();
