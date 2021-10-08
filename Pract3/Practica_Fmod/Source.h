@@ -21,15 +21,16 @@ public:
 	enum EffectId : int
 	{
 		Pitch = 0,
+		Movement,
 		Volumen,
 	};
 
 	struct SoundID
 	{
 		public:
-			RutaId nombre;
+			RutaId tipo;
 			std::string ruta;
-			std::string name;
+			std::string nombre;
 	};
 
 	struct Effect

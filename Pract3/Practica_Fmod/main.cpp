@@ -20,6 +20,10 @@
 #define ENTER 13		
 #define ADD 43			
 #define SUB 45			
+#define W 119			
+#define A 97			
+#define S 115			
+#define D 100			
 
 
 using namespace FMOD;
@@ -27,6 +31,33 @@ System* syst;
 
 class BaseSound;
 
+enum soundType
+{
+	sound3D,
+	sound2D,
+};
+
+enum dir {
+	up,
+	down,
+	left,
+	right,
+};
+
+struct distance
+{
+	dir d;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
+};
+
+struct Comp
+{
+	Source::RutaId r;
+	bool loop = false;
+	soundType sT;
+};
 
 
 
@@ -132,7 +163,7 @@ public:
 	virtual float getEfect(Source::EffectId e) {
 		switch (e)
 		{
-		case Source::EffectId::Pitch: 
+		case Source::EffectId::Pitch:
 		{
 			float p;
 			canal->getPitch(&p);
@@ -144,6 +175,14 @@ public:
 			canal->getVolume(&p);
 			return p;
 		}
+		//case Source::EffectId::Movement:
+		//{
+		//	Sound3D* s = nullptr;
+		//	s = dynamic_cast<Sound3D*>(this);
+		//	FMOD_VECTOR v = s->getPosition();
+		//	std::cout << v.x << v.y << v.z;
+		//	return -1;
+		//}
 		default:
 			break;
 		}
@@ -176,13 +215,27 @@ public:
 
 class Sound3D : public BaseSound {
 public:
-	Sound3D(const char* ruta, std::string n = "undefined", unsigned int dist = 5) {
+	Sound3D(const char* ruta, std::string n = "undefined", bool loop = false, unsigned int dist = 5) {
+
 		nombre = n;
 		FMOD_RESULT res;
-		res = syst->createSound(ruta, FMOD_3D, 0, &sonido);
+		if (loop)
+			res = syst->createSound(ruta, FMOD_3D | FMOD_LOOP_NORMAL, 0, &sonido);
+		else
+			res = syst->createSound(ruta, FMOD_3D, 0, &sonido);
+
+		play();
+
 		ERRCHECK(res);
-		canal->setLoopCount(0);
-		canal->setPosition(dist, FMOD_TIMEUNIT_MS);
+
+		FMOD_VECTOR
+			listenerPos = { 0,0,0 },	// posicion del listener
+			listenerVel = { 0,0,0 },	// velocidad del listener
+			up = { 0,1,0 },				// vector up: hacia la ``coronilla''
+			at = { 1,0,0 };				// vector at: hacia donde mira
+		// colocamos listener
+		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+		playList.push_back(this);
 	}
 
 	virtual ~Sound3D() {
@@ -196,8 +249,19 @@ public:
 	};
 
 	//	Setea una posición a un sonido 3d
-	void setPosition(unsigned int p) {
-		canal->setPosition(p, FMOD_TIMEUNIT_MS);
+	void setPosition(distance d) {
+		FMOD_VECTOR
+			pos = { d.x,d.y,d.z },
+			vel = { 1.0f,1.0f,1.0f };
+		canal->set3DAttributes(&pos,&vel);
+	}
+
+	FMOD_VECTOR getPosition() {
+		FMOD_VECTOR
+			pos,
+			vel;
+		canal->get3DAttributes(&pos,&vel);
+		return pos;
 	}
 
 };
@@ -208,11 +272,12 @@ public:
 		nombre = n;
 		FMOD_RESULT res;
 		if (loop)
-			res = syst->createSound(ruta, FMOD_LOOP_NORMAL, 0, &sonido);
+			res = syst->createSound(ruta, FMOD_2D | FMOD_LOOP_NORMAL, 0, &sonido);
 		else
 			res = syst->createSound(ruta, FMOD_2D, 0, &sonido);
 
 		ERRCHECK(res);
+		playList.push_back(this);
 	}
 	virtual ~Sound2D() {
 		std::cout << "2D\n";
@@ -241,7 +306,7 @@ void grafica() {
 			std::cout << ">" << Source::efectos[i].name << "   ";
 		else
 			std::cout << Source::efectos[i].name << "   ";
-		
+
 	}
 	std::cout << "\n\n";
 }
@@ -259,10 +324,23 @@ void muestraEfecto() {
 		else if (pot <= 0)
 			pot = 0;
 		std::cout << (pot) / 100.0f;
-	
+
 		break;
 	}
 	case Source::EffectId::Volumen: {
+		float pot = playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
+		if (pot > 1.0f)
+			pot = 1.0f;
+		else if (pot <= 0)
+			pot = 0;
+		//std::cout << (pot - 0) / 1.0f;
+		int norm = pot * 10;
+		/*std::cout << ">" << std::setfill('-') << std::setw(norm);*/
+		std::cout << std::setfill('x') << std::setw(norm);
+		std::cout << norm << std::endl;
+		break;
+	}
+	case Source::EffectId::Movement: {
 		float pot = playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
 		if (pot > 1.0f)
 			pot = 1.0f;
@@ -281,7 +359,7 @@ void muestraEfecto() {
 	//std::cout << playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
 }
 
-void modificaEfecto(float value) 
+void modificaEfecto(float value, distance* d = nullptr)
 {
 	switch (Source::efectos[selectionH].effect)
 	{
@@ -293,10 +371,111 @@ void modificaEfecto(float value)
 		playList.at(selectionV)->modEfect(Source::efectos[selectionH].effect, value * 0.1f);
 		break;
 	}
+	case Source::EffectId::Movement: {
+		static_cast<Sound3D*>(playList.at(selectionV))->setPosition(*d);
+		break;
+	}
 	default:
 		break;
 	}
 	muestraEfecto();
+}
+
+bool gestionaTeclas(int c) {
+	switch (c)
+	{
+	case KEY_DOWN:
+	{
+		selectionV += 1;
+		if (selectionV >= playList.size())
+			selectionV = 0;
+		grafica();
+		break;
+	}
+	case KEY_UP:
+	{
+		selectionV -= 1;
+		if (selectionV < 0)
+			selectionV = playList.size() - 1;
+		grafica();
+		break;
+	}
+	case KEY_LEFT:
+	{
+		selectionH -= 1;
+		if (selectionH < 0)
+			selectionH = Source::efectos.size() - 1;
+		grafica();
+		break;
+	}
+	case KEY_RIGHT:
+	{
+		selectionH += 1;
+		if (selectionH >= Source::efectos.size())
+			selectionH = 0;
+		grafica();
+		break;
+	}
+	case ENTER:
+	{
+		muestraEfecto();
+		break;
+	}
+	case ADD:
+	{
+		modificaEfecto(1.0f);
+		break;
+	}
+	case SUB:
+	{
+		modificaEfecto(-1.0);
+		break;
+	}
+	case W:
+	{
+		if (selectionH == 2) {
+			distance forward = {
+				dir::right, 0.0f, 1.0f,0.0f
+			};
+			modificaEfecto(0, &forward);
+		}
+		break;
+	}
+	case EXIT:
+	{
+		std::cout << "\n";
+		return false;
+		break;
+	}
+	default:
+		std::cout << c << std::endl;
+		break;
+	}
+	return true;
+}
+
+void cargaSonidos(const std::vector<Comp> s) {
+	for (int i = 0; i < s.size(); i++) {
+		switch (s[i].sT)
+		{
+		case soundType::sound2D:
+		{
+			Sound2D* s2D = new Sound2D(Source::sonidos[s[i].r].ruta.c_str(),
+				Source::sonidos[s[i].r].nombre, s[i].loop);
+			//playList.push_back(s2D);
+			break;
+		}
+		case soundType::sound3D:
+		{
+			Sound3D* s3D = new Sound3D(Source::sonidos[s[i].r].ruta.c_str(),
+				Source::sonidos[s[i].r].nombre, s[i].loop);
+			//playList.push_back(s3D);
+			break;
+		}
+		default:
+			break;
+		}
+	}
 }
 
 
@@ -366,7 +545,7 @@ int main() {
 #pragma endregion
 
 #pragma region Apartado2
-	Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].name, true);
+	/*Sound2D* motor = new Sound2D(Source::sonidos[Source::Motor].ruta.c_str(), Source::sonidos[Source::Motor].name, true);
 	playList.push_back(motor);
 	motor->playLoop();
 
@@ -440,8 +619,35 @@ int main() {
 			break;
 		}
 		syst->update();
+	}*/
+#pragma endregion
+
+#pragma region Apartado3
+
+	std::vector<Comp> s = {
+		Comp{Source::FootStep, true, soundType::sound3D}
+	};
+	cargaSonidos(s);
+
+	//playList.front()->playLoop();
+	grafica();
+
+	bool run = true;
+	while (run)
+	{
+		if (_kbhit()) {
+			int c;
+			run = gestionaTeclas((c = getch()));
+		}
+		syst->update();
 	}
 #pragma endregion
+
+#pragma region Apartado4
+
+#pragma endregion
+
+
 
 	FMOD_RESULT res = syst->release();
 	ERRCHECK(res);
