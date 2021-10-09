@@ -25,15 +25,14 @@
 #define S 115			
 #define D 100	
 
-#define Z 90
-#define X 88
-#define C 67
-#define V 86
-#define B 66
-#define N 78
-//#define M 77	//SE USA EL VALOR EN KEY_RIGHT
-//#define ,		LA COMA HAY QUE DEFINIRLA, LO PONE EN EL ENUNCIADO COMO "DO alto"
-
+#define Z 122
+#define X 120
+#define C 99
+#define V 118
+#define B 98
+#define N 110
+#define M 109	
+#define COMA 44	
 
 using namespace FMOD;
 System* syst;
@@ -513,13 +512,11 @@ bool gestionaTeclas(int c) {
 	}case N: {
 		break; 
 	}
-	/*}case M: {
-		break; 
-	}*/
-
-	/*}case, : {
-		break; 
-	}*/
+	case M: {
+		break;
+	}
+	case COMA:{
+	}
 
 	case EXIT: {
 		std::cout << "\n";
@@ -778,12 +775,7 @@ int main() {
 	short int frecuencia[8] = { 0,2,4,5,7,9,11,12 };
 	float pitch[8];
 
-	std::vector<Comp> s;
-	for (int i = 0; i < 8; i++) {
-		pitch[i] = std::pow(2, (frecuencia[i] / 12.0f));
-		std::cout << pitch[i] << std::endl;
-		s.push_back(Comp{ Source::Piano, false, soundType::sound2D });
-	}
+	std::vector<Comp> s = { Comp{ Source::Piano, false, soundType::sound2D } };
 
 	cargaSonidos(s);
 	grafica();
@@ -801,9 +793,6 @@ int main() {
 		}
 		syst->update();
 	}
-
-
-
 
 #pragma endregion
 
