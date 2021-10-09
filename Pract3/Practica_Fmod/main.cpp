@@ -23,13 +23,25 @@
 #define W 119			
 #define A 97			
 #define S 115			
-#define D 100			
+#define D 100	
+
+#define Z 90
+#define X 88
+#define C 67
+#define V 86
+#define B 66
+#define N 78
+//#define M 77	//SE USA EL VALOR EN KEY_RIGHT
+//#define ,		LA COMA HAY QUE DEFINIRLA, LO PONE EN EL ENUNCIADO COMO "DO alto"
 
 
 using namespace FMOD;
 System* syst;
 
 class BaseSound;
+
+// Constantes - apartado 5
+const char* TECLAS = "zxcvbnm,";	// do; re; mi; fa; sol; la; si; ',' = do alto
 
 enum soundType
 {
@@ -487,7 +499,28 @@ bool gestionaTeclas(int c) {
 			modificaEfecto(0, &forward);
 		}
 		break;
+	}	
+	case Z: {
+		break;
+	}case X: {
+		break;
+	}case C: {
+		break;
+	}case V: {
+		break;
+	}case B: {
+		break;
+	}case N: {
+		break; 
 	}
+	/*}case M: {
+		break; 
+	}*/
+
+	/*}case, : {
+		break; 
+	}*/
+
 	case EXIT: {
 		std::cout << "\n";
 		return false;
@@ -524,10 +557,12 @@ void cargaSonidos(const std::vector<Comp> s) {
 	}
 }
 
-double randMToN(double M, double N)
+double randMToN(double mm, double nn)
 {
-	return M + (rand() / (RAND_MAX / (N - M)));
+	return mm + (rand() / (RAND_MAX / (nn - mm)));
 }
+
+
 int main() {
 
 	if (syst == NULL) {
@@ -691,7 +726,7 @@ int main() {
 #pragma endregion
 
 #pragma region Apartado4
-	std::vector<Comp> s = {
+	/*std::vector<Comp> s = {
 			Comp{Source::RifleMod01, false, soundType::sound2D},
 			Comp{Source::RifleMod02, false, soundType::sound2D},
 			Comp{Source::RifleMod03, false, soundType::sound2D},
@@ -735,10 +770,40 @@ int main() {
 			run = gestionaTeclas((c = getch()));
 		}
 		syst->update();
-	}
+	}*/
 #pragma endregion
 
 #pragma region Apartado5
+
+	short int frecuencia[8] = { 0,2,4,5,7,9,11,12 };
+	float pitch[8];
+
+	std::vector<Comp> s;
+	for (int i = 0; i < 8; i++) {
+		pitch[i] = std::pow(2, (frecuencia[i] / 12.0f));
+		std::cout << pitch[i] << std::endl;
+		s.push_back(Comp{ Source::Piano, false, soundType::sound2D });
+	}
+
+	cargaSonidos(s);
+	grafica();
+
+	std::time_t t = std::time(0);
+	std::tm* now = std::localtime(&t);
+
+
+	bool run = true;
+	while (run)
+	{
+		if (_kbhit()) {
+			int c;
+			run = gestionaTeclas((c = getch()));
+		}
+		syst->update();
+	}
+
+
+
 
 #pragma endregion
 
