@@ -18,7 +18,8 @@ std::vector<Source::SoundID> Source::sonidos{
 };
 
 std::vector<Source::Effect> Source::efectos{
-	{ Pitch		,"Pitch"},
-	{ Volumen	,"Volumen"},
-	{ Movement	,"Movimiento"},
+	{ Pitch			,"Pitch"},
+	{ Volumen		,"Volumen"},
+	{ Movement		,"Movimiento"},
+	{ Posicional	,"Posicional"},
 };

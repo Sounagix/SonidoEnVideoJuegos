@@ -27,6 +27,7 @@ public:
 		Pitch = 0,
 		Movement,
 		Volumen,
+		Posicional,
 	};
 
 	struct SoundID

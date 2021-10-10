@@ -45,11 +45,11 @@ enum soundType
 	sound2D,
 };
 
-enum dir {
-	up,
-	down,
+enum orientation {
+	forward,
+	back,
 	left,
-	right,
+	right
 };
 
 // Determina el tipo de Loop con el metodo
@@ -61,11 +61,12 @@ enum loop {
 
 struct distance
 {
-	dir d;
+	orientation d;
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
 };
+
 
 struct Comp
 {
@@ -75,16 +76,26 @@ struct Comp
 };
 
 
-
+//	Lista de todos los sonidos cargados
 std::vector<BaseSound*> playList;
+//	index para los efectos 
 int selectionH = 0;
+//	index para las sonidos cargados
 int selectionV = 0;
+
+//	Máxima anchura que el emisor se puede desplazar
+const int MAX_WIDTH	= 20;
+const int MIN_WIDTH	= -20;
+//	Máxima altura que el emisor se puede desplazar
+const int MAX_HEIGHT= 10;
+const int MIN_HEIGHT= -10;
 
 
 void ERRCHECK(FMOD_RESULT result)
 {
 	if (result != FMOD_OK) {
 		std::cout << FMOD_ErrorString(result) << std::endl;
+		exit(-1);
 	}
 }
 
@@ -124,7 +135,7 @@ public:
 	}
 
 	//	Reproduce un sound 
-	void play() {
+	virtual void play() {
 		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
 		ERRCHECK(res);
 	}
@@ -231,7 +242,7 @@ public:
 
 class Sound3D : public BaseSound {
 public:
-	Sound3D(const char* ruta, std::string n = "undefined", bool loop = false, unsigned int dist = 5) {
+	Sound3D(const char* ruta, std::string n = "undefined", bool loop = false) {
 
 		nombre = n;
 		FMOD_RESULT res;
@@ -240,7 +251,6 @@ public:
 		else
 			res = syst->createSound(ruta, FMOD_3D, 0, &sonido);
 
-		play();
 
 		ERRCHECK(res);
 
@@ -259,14 +269,67 @@ public:
 		std::cout << "3D\n";
 	}
 
+	//	Cuando se de play a un sound3D con parametros para 
+	virtual void play(float in, float out, float outGain) {
+		FMOD_RESULT res = syst->playSound(sonido, 0, false, &canal);
+		ERRCHECK(res);
+		setSourceConeAngle(in, out, outGain);
+	}
+
 	virtual void update(float deltaTime) override {
-		currTime += deltaTime;
-		if (currTime >= timeRate)
-			play();
+			
 	};
 
-	//	Setea una posición a un sonido 3d
-	void setPosition(distance d) {
+	//	Setea los conos correspondiente al canal
+	void setSourceConeAngle(float insCone = 0.0f, float outCone = 0.0f, float outSideVol = 0.0f) {
+		bool playing;
+		canal->isPlaying(&playing);
+		if(playing)
+			canal->set3DConeSettings(insCone, outCone, outSideVol);
+	}
+
+	//	Setea la orientación en un espacio 2D sobre un sonido 3D
+	void setSourceOrientation(orientation ori) {
+
+		FMOD_VECTOR
+			orient;
+		switch (ori)
+		{
+		case forward:
+			orient = { 0.0,0.0,1.0 };
+			break;
+		case back:
+			orient = { 0.0,0.0,-1.0 };
+			break;
+		case left:
+			orient = { -1.0,0.0,0.0 };
+			break;
+		case right:
+			orient = { 1.0,0.0,0.0 };
+			break;
+		default:
+			break;
+		}
+		canal->set3DConeOrientation(&orient);
+	}
+
+	//	Setea la posición del source
+	void setSourcePos(distance d) {
+		FMOD_VECTOR
+			pos,
+			vel;
+
+		canal->get3DAttributes(&pos, &vel);
+
+		pos.x += d.x;
+		pos.y += d.y;
+		pos.z += d.z;
+
+		canal->set3DAttributes(&pos, &vel);
+	}
+
+	//	Setea una posición del listener
+	void setListenerPos(distance d) {
 		FMOD_VECTOR
 			pos,
 			vel,
@@ -290,7 +353,20 @@ public:
 		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
 	}
 
-	FMOD_VECTOR getPosition() {
+	//	Devuelve la posición del listener
+	FMOD_VECTOR getListenerPos() {
+		FMOD_VECTOR
+			pos,
+			vel,
+			forw,
+			up;
+
+		syst->get3DListenerAttributes(0, &pos, &vel, &forw, &up);
+		return pos;
+	}
+
+	//	Devuelve la posición del listener
+	FMOD_VECTOR getSourcePos() {
 		FMOD_VECTOR
 			pos,
 			vel;
@@ -298,6 +374,14 @@ public:
 		return pos;
 	}
 
+	//	In , out , outVol
+	std::tuple<float, float, float> getConeInfo() {
+		FMOD_RESULT res;
+		float in, out, outVol;
+		res = canal->get3DConeSettings(&in, &out, &outVol);
+		ERRCHECK(res);
+		return std::tuple<float, float, float>(in, out, outVol);
+	}
 };
 
 class Sound2D : public BaseSound {
@@ -322,6 +406,7 @@ public:
 };
 
 
+//	Muestra en pantalla los sonidos cargar y los efectos activos
 void grafica() {
 	system("CLS");
 	std::cout << "Sonidos cargados " << playList.size() << std::endl;
@@ -387,6 +472,38 @@ void muestraEfecto() {
 		std::cout << norm << std::endl;
 		break;
 	}
+	case Source::EffectId::Posicional: {
+
+		Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+		std::cout << "Pos List " << s->getListenerPos().x << " " << s->getListenerPos().z << std::endl;
+		std::cout << "Pos Sour " << s->getSourcePos().x << " " << s->getSourcePos().z << std::endl;
+
+		std::tuple<float, float, float> t = s->getConeInfo();
+
+		std::cout << "Cone in " << (std::get<0>(t));
+		std::cout << "	Cone out " << (std::get<1>(t));
+		std::cout << "	Cone out Volumen " << (std::get<2>(t)) << "\n";
+
+
+		for (int x = MIN_HEIGHT * 2; x < MAX_HEIGHT * 2; x++) {
+			for (int y = MIN_WIDTH * 2; y < MAX_WIDTH * 2; y++) {
+
+				if (s->getListenerPos().x == x && s->getListenerPos().y == y) {
+					std::cout << "L ";
+				}
+				else if (s->getSourcePos().x == x && s->getSourcePos().z == y) {
+					std::cout << "S ";
+				}
+				else
+				{
+					std::cout << ". ";
+				}
+			}
+			std::cout << std::endl;
+		}
+
+		break;
+	}
 	default:
 		break;
 	}
@@ -406,7 +523,12 @@ void modificaEfecto(float value, distance* d = nullptr)
 		break;
 	}
 	case Source::EffectId::Movement: {
-		static_cast<Sound3D*>(playList.at(selectionV))->setPosition(*d);
+		static_cast<Sound3D*>(playList.at(selectionV))->setListenerPos(*d);
+		break;
+	}
+	case Source::EffectId::Posicional: {
+		static_cast<Sound3D*>(playList.at(selectionV))->setSourcePos(*d);
+		static_cast<Sound3D*>(playList.at(selectionV))->setSourceOrientation(d->d);
 		break;
 	}
 	default:
@@ -447,7 +569,8 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case ENTER: {
-		muestraEfecto();
+		//	TODO* testeo
+		dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
 		break;
 	}
 	case ADD: {
@@ -461,71 +584,78 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case W: {
-		if (selectionH == 2) {
+		//	Para el efecto movimiento
+		if (selectionH == 2 || selectionH == 3) {
 			distance forward = {
-				dir::right, 1.0f, 0.0f, 0.0f
+				orientation::forward, 1.0f, 0.0f, 0.0f
 			};
 			modificaEfecto(0, &forward);
 		}
 		break;
 	}
 	case A: {
-		if (selectionH == 2) {
-			distance forward = {
-				dir::left,0.0f, 0.0f,1.0f
+		if (selectionH == 2 || selectionH == 3) {
+			distance left = {
+				orientation::left, 0.0f, 0.0f, 1.0f
 			};
-			modificaEfecto(0, &forward);
+			modificaEfecto(0, &left);
 		}
 		break;
 	}
 	case S: {
-		if (selectionH == 2) {
-			distance forward = {
-				dir::left,-1.0f, 0.0f,0.0f
+		if (selectionH == 2 || selectionH == 3) {
+			distance back = {
+				orientation::back,-1.0f, 0.0f,0.0f
 			};
-			modificaEfecto(0, &forward);
+			modificaEfecto(0, &back);
 		}
 		break;
 	}
 	case D: {
-		if (selectionH == 2) {
-			distance forward = {
-				dir::left,0.0f, 0.0f,-1.0f
+		if (selectionH == 2 || selectionH == 3) {
+			distance right = {
+				orientation::right,0.0f, 0.0f,-1.0f
 			};
-			modificaEfecto(0, &forward);
+			modificaEfecto(0, &right);
 		}
 		break;
-	}	
+	}
 	case Z: {
 		//0,2,4,5,7,9,11,12 escala de frecuencias
 		//no hace nada al ser la primera nota: DO
 		std::cout << "DO" << std::endl;
 		break;
-	}case X: {
+
+	}
+	case X: {
 		//nota: RE
 		playList[0]->setPitch(std::pow(2, (2 / 12.0f)));
 		std::cout << "RE" << std::endl;
 		break;
-	}case C: {
+	}
+	case C: {
 		//nota: MI
 		playList[0]->setPitch(std::pow(2, (4 / 12.0f)));
 		std::cout << "MI" << std::endl;
 		break;
-	}case V: {
+	}
+	case V: {
 		//nota: FA
 		playList[0]->setPitch(std::pow(2, (5 / 12.0f)));
 		std::cout << "FA" << std::endl;
 		break;
-	}case B: {
+	}
+	case B: {
 		//nota: SOL
 		playList[0]->setPitch(std::pow(2, (7 / 12.0f)));
 		std::cout << "SOL" << std::endl;
 		break;
-	}case N: {
+	}
+	case N: {
 		//nota: LA
 		std::cout << "LA" << std::endl;
 		playList[0]->setPitch(std::pow(2, (9 / 12.0f)));
-		break; 
+		break;
 	}
 	case M: {
 		//nota: SI
@@ -533,13 +663,12 @@ bool gestionaTeclas(int c) {
 		playList[0]->setPitch(std::pow(2, (11 / 12.0f)));
 		break;
 	}
-	case COMA:{
+	case COMA: {
 		//nota: DO ALTO
 		playList[0]->setPitch(std::pow(2, (12 / 12.0f)));
 		std::cout << "DO*" << std::endl;
 		break;
 	}
-
 	case EXIT: {
 		std::cout << "\n";
 		return false;
@@ -581,7 +710,6 @@ double randMToN(double mm, double nn)
 	return mm + (rand() / (RAND_MAX / (nn - mm)));
 }
 
-
 int main() {
 
 	if (syst == NULL) {
@@ -592,8 +720,6 @@ int main() {
 		res = syst->init(128, FMOD_INIT_NORMAL, 0);
 		ERRCHECK(res);
 	}
-
-
 #pragma region Apartado1
 	//Sound2D* battle = new Sound2D(Source::sonidos[Source::Battle].ruta.c_str());
 	//Sound3D* gun1 = new Sound3D(Source::sonidos[Source::Gun1].ruta.c_str());
@@ -755,7 +881,7 @@ int main() {
 
 	grafica();
 
-	std::time_t t = std::time(0);   
+	std::time_t t = std::time(0);
 	std::tm* now = std::localtime(&t);
 
 	double randomTime = rand() % 10;
@@ -766,7 +892,7 @@ int main() {
 	bool run = true;
 	while (run)
 	{
-		t = std::time(0); 
+		t = std::time(0);
 		now = std::localtime(&t);
 
 		if (now->tm_sec > tmc) {
@@ -794,34 +920,51 @@ int main() {
 
 #pragma region Apartado5
 
-	std::vector<Comp> s = { 
-		Comp{ Source::Piano, false, soundType::sound2D }, 
-	};
+	//std::vector<Comp> s = { 
+	//	Comp{ Source::Piano, false, soundType::sound2D }, 
+	//};
 
+	//cargaSonidos(s);
+	//grafica();
+
+	///*std::time_t t = std::time(0);
+	//std::tm* now = std::localtime(&t);*/
+
+	//std::string nota = "";
+	//bool run = true;
+	//while (run)
+	//{
+	//	if (_kbhit()) {
+	//		int c;
+	//		run = gestionaTeclas((c = getch()));
+	//		
+	//		if (c == Z || c == X || c == C || c == V || c == B || c == N || c == M || c == COMA) {
+	//			playList[0]->play();
+	//		}
+	//	}
+	//	syst->update();
+	//}
+
+#pragma endregion
+
+#pragma region Apartado6
+	std::vector<Comp> s = {
+			Comp{ Source::Scooter, true, soundType::sound3D },
+	};
 	cargaSonidos(s);
 	grafica();
 
-	/*std::time_t t = std::time(0);
-	std::tm* now = std::localtime(&t);*/
-
-	std::string nota = "";
 	bool run = true;
 	while (run)
 	{
 		if (_kbhit()) {
 			int c;
 			run = gestionaTeclas((c = getch()));
-			
-			if (c == Z || c == X || c == C || c == V || c == B || c == N || c == M || c == COMA) {
-				playList[0]->play();
-			}
 		}
 		syst->update();
 	}
 
 #pragma endregion
-
-
 
 
 	FMOD_RESULT res = syst->release();
