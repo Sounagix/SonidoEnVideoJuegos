@@ -1,9 +1,15 @@
 ﻿  main.cpp
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(332,25): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(375,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(388,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(435,36): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(442,43): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(783,22): warning C4244: '=': conversión de 'double' a 'float'; posible pérdida de datos
-C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(209): warning C4715: 'BaseSound::getEfect': no todas las rutas de acceso de control devuelven un valor
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(341,25): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(384,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(397,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(444,36): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(451,43): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(518,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(522,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(526,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(530,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(534,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(539,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(544,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(218): warning C4715: 'BaseSound::getEfect': no todas las rutas de acceso de control devuelven un valor
   Practica_Fmod.vcxproj -> C:\Users\PEPIN\Documents\UNIVERSIDAD\UCM\CURSO_2021-2022\SONIDOS\practica3\SonidoEnVideoJuegos\Pract3\Exes\Practica_Fmod.exe

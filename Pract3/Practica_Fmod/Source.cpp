@@ -7,7 +7,7 @@ std::vector<Source::SoundID> Source::sonidos{
 	{ Gun1				, "../muestras/Gun1.wav"	,"Gun1"},
 	{ Motor				, "../muestras/motor.wav"	,"Motor"},
 	{ Gun2				, "../muestras/Gun2.wav"	,"Gun2"},
-	{ Piano				, "../muestras/piano.wav"	,"Piano"},
+	{ Piano				, "../muestras/piano.ogg"	,"Piano"},
 	{ Rifle				, "../muestras/rifle.wav"	,"Rifle"},
 	{ RifleMod01		, "../muestras/rifle_mod/rifle_01.wav"	,"Rifle01"},
 	{ RifleMod02		, "../muestras/rifle_mod/rifle_02.wav"	,"Rifle02"},

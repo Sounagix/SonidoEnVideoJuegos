@@ -39,8 +39,18 @@ System* syst;
 
 class BaseSound;
 
-// Constantes - apartado 5
-const char* TECLAS = "zxcvbnm,";	// do; re; mi; fa; sol; la; si; ',' = do alto
+
+
+enum notasPiano {
+	DO = 122,
+	RE = 120,
+	MI = 99,
+	FA = 118,
+	SOL = 98,
+	LA = 110,
+	SI = 109,
+	DOAlto = 44
+};
 
 enum soundType
 {
@@ -500,22 +510,38 @@ bool gestionaTeclas(int c) {
 		break;
 	}	
 	case Z: {
+		//0,2,4,5,7,9,11,12 escala de frecuencias
+		//no hace nada al ser la primera nota: DO
 		break;
 	}case X: {
+		//nota: RE
+		playList[0]->setPitch(std::pow(2, (2 / 12.0f)));
 		break;
 	}case C: {
+		//nota: MI
+		playList[0]->setPitch(std::pow(2, (4 / 12.0f)));
 		break;
 	}case V: {
+		//nota: FA
+		playList[0]->setPitch(std::pow(2, (5 / 12.0f)));
 		break;
 	}case B: {
+		//nota: SOL
+		playList[0]->setPitch(std::pow(2, (7 / 12.0f)));
 		break;
 	}case N: {
+		//nota: LA
+		playList[0]->setPitch(std::pow(2, (9 / 12.0f)));
 		break; 
 	}
 	case M: {
+		//nota: SI
+		playList[0]->setPitch(std::pow(2, (11 / 12.0f)));
 		break;
 	}
 	case COMA:{
+		//nota: DO ALTO
+		playList[0]->setPitch(std::pow(2, (12 / 12.0f)));
 	}
 
 	case EXIT: {
@@ -772,10 +798,9 @@ int main() {
 
 #pragma region Apartado5
 
-	short int frecuencia[8] = { 0,2,4,5,7,9,11,12 };
-	float pitch[8];
-
-	std::vector<Comp> s = { Comp{ Source::Piano, false, soundType::sound2D } };
+	std::vector<Comp> s = { 
+		Comp{ Source::Piano, false, soundType::sound2D }, 
+	};
 
 	cargaSonidos(s);
 	grafica();
@@ -783,13 +808,47 @@ int main() {
 	std::time_t t = std::time(0);
 	std::tm* now = std::localtime(&t);
 
-
+	std::string nota = "";
 	bool run = true;
 	while (run)
 	{
 		if (_kbhit()) {
 			int c;
 			run = gestionaTeclas((c = getch()));
+
+			switch (int n = c)
+			{
+			case DO:
+				std::cout << "DO" << std::endl;
+				break;
+			case RE:
+				std::cout << "RE" << std::endl;
+				break;
+			case MI:
+				std::cout << "MI" << std::endl;
+				break;
+			case FA:
+				std::cout << "FA" << std::endl;
+				break;
+			case SOL:
+				std::cout << "SOL" << std::endl;
+				break;
+			case LA:
+				std::cout << "LA" << std::endl;
+				break;
+			case SI:
+				std::cout << "SI" << std::endl;
+				break;
+			case DOAlto:
+				std::cout << "DO*" << std::endl;
+				break;
+			default:
+				break;
+			}
+			
+			if (c == Z || c == X || c == C || c == V || c == B || c == N || c == M || c == COMA) { //!!!!!!!!!!!!! no reconoce la coma, cierra la ejecución
+				playList[0]->play();
+			}
 		}
 		syst->update();
 	}
