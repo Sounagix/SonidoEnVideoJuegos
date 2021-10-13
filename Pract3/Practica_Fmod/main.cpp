@@ -84,11 +84,11 @@ int selectionH = 0;
 int selectionV = 0;
 
 //	Máxima anchura que el emisor se puede desplazar
-const int MAX_WIDTH	= 20;
-const int MIN_WIDTH	= -20;
+const int MAX_WIDTH = 20;
+const int MIN_WIDTH = -20;
 //	Máxima altura que el emisor se puede desplazar
-const int MAX_HEIGHT= 10;
-const int MIN_HEIGHT= -10;
+const int MAX_HEIGHT = 10;
+const int MIN_HEIGHT = -10;
 
 
 void ERRCHECK(FMOD_RESULT result)
@@ -254,14 +254,6 @@ public:
 
 		ERRCHECK(res);
 
-		FMOD_VECTOR
-			listenerPos = { 0,0,0 },	// posicion del listener
-			listenerVel = { 0,0,0 },	// velocidad del listener
-			up = { 0,1,0 },				// vector up: hacia la ``coronilla''
-			at = { 1,0,0 };				// vector at: hacia donde mira
-		// colocamos listener
-		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
-
 		playList.push_back(this);
 	}
 
@@ -277,14 +269,14 @@ public:
 	}
 
 	virtual void update(float deltaTime) override {
-			
+
 	};
 
 	//	Setea los conos correspondiente al canal
 	void setSourceConeAngle(float insCone = 0.0f, float outCone = 0.0f, float outSideVol = 0.0f) {
 		bool playing;
 		canal->isPlaying(&playing);
-		if(playing)
+		if (playing)
 			canal->set3DConeSettings(insCone, outCone, outSideVol);
 	}
 
@@ -322,7 +314,7 @@ public:
 		canal->get3DAttributes(&pos, &vel);
 
 		pos.x += d.x;
-		pos.y += d.y;
+		pos.y = 0.0f;
 		pos.z += d.z;
 
 		canal->set3DAttributes(&pos, &vel);
@@ -382,6 +374,13 @@ public:
 		ERRCHECK(res);
 		return std::tuple<float, float, float>(in, out, outVol);
 	}
+
+	FMOD_VECTOR getOrientation() {
+		FMOD_VECTOR 
+			ori;
+		canal->get3DConeOrientation(&ori);
+		return ori;
+	}
 };
 
 class Sound2D : public BaseSound {
@@ -405,6 +404,26 @@ public:
 
 };
 
+
+bool posValida(int x, int z, distance d) {
+	int posX, posZ;
+	posX = x + d.x;
+	posZ = z + d.z;
+	return posX < MAX_WIDTH&& posX > MIN_WIDTH && posZ < MAX_HEIGHT&& posZ > MIN_HEIGHT ? true : false;
+}
+
+void initListener() {
+
+	FMOD_RESULT res;
+	FMOD_VECTOR
+		listenerPos = { 0,0,0 },		// posicion del listener
+		listenerVel = { 0,0,0 },		// velocidad del listener
+		up = { 0, 1, 0 },				// vector up: hacia la ``coronilla''
+		at = { 0, 0, 1 };				// vector at: hacia donde mira
+	// colocamos listener
+	res = syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+	ERRCHECK(res);
+}
 
 //	Muestra en pantalla los sonidos cargar y los efectos activos
 void grafica() {
@@ -475,8 +494,8 @@ void muestraEfecto() {
 	case Source::EffectId::Posicional: {
 
 		Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
-		std::cout << "Pos List " << s->getListenerPos().x << " " << s->getListenerPos().z << std::endl;
-		std::cout << "Pos Sour " << s->getSourcePos().x << " " << s->getSourcePos().z << std::endl;
+		std::cout << "Pos List " << " x: " << s->getListenerPos().x << " z: " << s->getListenerPos().z << std::endl;
+		std::cout << "Pos Sour " << " x: " << s->getSourcePos().x << " z: " << s->getSourcePos().z << std::endl;
 
 		std::tuple<float, float, float> t = s->getConeInfo();
 
@@ -485,13 +504,13 @@ void muestraEfecto() {
 		std::cout << "	Cone out Volumen " << (std::get<2>(t)) << "\n";
 
 
-		for (int x = MIN_HEIGHT * 2; x < MAX_HEIGHT * 2; x++) {
-			for (int y = MIN_WIDTH * 2; y < MAX_WIDTH * 2; y++) {
+		for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
+			for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
 
-				if (s->getListenerPos().x == x && s->getListenerPos().y == y) {
+				if ((int)s->getListenerPos().x == x && (int)s->getListenerPos().z == y) {
 					std::cout << "L ";
 				}
-				else if (s->getSourcePos().x == x && s->getSourcePos().z == y) {
+				else if ((int)s->getSourcePos().x == y && (int)s->getSourcePos().z == x) {
 					std::cout << "S ";
 				}
 				else
@@ -527,8 +546,11 @@ void modificaEfecto(float value, distance* d = nullptr)
 		break;
 	}
 	case Source::EffectId::Posicional: {
-		static_cast<Sound3D*>(playList.at(selectionV))->setSourcePos(*d);
-		static_cast<Sound3D*>(playList.at(selectionV))->setSourceOrientation(d->d);
+		Sound3D* sd = dynamic_cast<Sound3D*>(playList.at(selectionV));
+		if (sd != nullptr && posValida((int)round(sd->getSourcePos().x), (int)round(sd->getSourcePos().y),*d)) {
+			sd->setSourcePos(*d);
+			sd->setSourceOrientation(d->d);
+		}
 		break;
 	}
 	default:
@@ -571,6 +593,8 @@ bool gestionaTeclas(int c) {
 	case ENTER: {
 		//	TODO* testeo
 		dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
+		//playList[selectionV]->play();
+
 		break;
 	}
 	case ADD: {
@@ -585,36 +609,36 @@ bool gestionaTeclas(int c) {
 	}
 	case W: {
 		//	Para el efecto movimiento
-		if (selectionH == 2 || selectionH == 3) {
+		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
 			distance forward = {
-				orientation::forward, 1.0f, 0.0f, 0.0f
+				orientation::forward, 0.0f, 0.0f, -1.0f
 			};
 			modificaEfecto(0, &forward);
 		}
 		break;
 	}
 	case A: {
-		if (selectionH == 2 || selectionH == 3) {
+		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
 			distance left = {
-				orientation::left, 0.0f, 0.0f, 1.0f
+				orientation::left, -1.0f, 0.0f, 0.0f
 			};
 			modificaEfecto(0, &left);
 		}
 		break;
 	}
 	case S: {
-		if (selectionH == 2 || selectionH == 3) {
+		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
 			distance back = {
-				orientation::back,-1.0f, 0.0f,0.0f
+				orientation::back, 0.0f, 0.0f, 1.0f
 			};
 			modificaEfecto(0, &back);
 		}
 		break;
 	}
 	case D: {
-		if (selectionH == 2 || selectionH == 3) {
+		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
 			distance right = {
-				orientation::right,0.0f, 0.0f,-1.0f
+				orientation::right, 1.0f, 0.0f, 0.0f
 			};
 			modificaEfecto(0, &right);
 		}
@@ -720,6 +744,7 @@ int main() {
 		res = syst->init(128, FMOD_INIT_NORMAL, 0);
 		ERRCHECK(res);
 	}
+	initListener();
 #pragma region Apartado1
 	//Sound2D* battle = new Sound2D(Source::sonidos[Source::Battle].ruta.c_str());
 	//Sound3D* gun1 = new Sound3D(Source::sonidos[Source::Gun1].ruta.c_str());
@@ -965,7 +990,6 @@ int main() {
 	}
 
 #pragma endregion
-
 
 	FMOD_RESULT res = syst->release();
 	ERRCHECK(res);
