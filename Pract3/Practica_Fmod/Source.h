@@ -30,6 +30,8 @@ public:
 		Movement,
 		Volumen,
 		Posicional,
+		FadeIn,
+		FadeOut,
 	};
 
 	struct SoundID

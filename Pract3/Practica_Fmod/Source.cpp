@@ -24,4 +24,6 @@ std::vector<Source::Effect> Source::efectos{
 	{ Volumen		,"Volumen"},
 	{ Movement		,"Movimiento"},
 	{ Posicional	,"Posicional"},
+	{ FadeIn		,"FadeIn"},
+	{ FadeOut		,"FadeOut"},
 };

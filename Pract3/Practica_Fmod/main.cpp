@@ -151,16 +151,23 @@ public:
 	}
 
 	//	Setea a un canal como pausa o no en función de un booleano
-	void setPause(bool status) {
-		canal->setPaused(status);
-		_statusPause = status;
+	void setPause() {
+		FMOD_RESULT res;
+		bool status = false;
+		res = canal->getPaused(&status);
+		ERRCHECK(res);
+		canal->setPaused(!status);
 	}
-	bool isPause() {
-		return _statusPause;
-	}
+
 	//	Cambia el volumen de un sonido *TODO
 	void setVolume(float v) {
 		canal->setVolume(v);
+	}
+
+	void stop() {
+		FMOD_RESULT res;
+		res = canal->stop();
+		ERRCHECK(res);
 	}
 
 	//	Cambia el estado de un canal a mute en función de un bool
@@ -188,21 +195,33 @@ public:
 	}
 
 	void fadeIn() {
-
+		unsigned long long parentclock;
+		FMOD_RESULT res = canal->getDSPClock(NULL, &parentclock);
+		res = canal->addFadePoint(parentclock, 0.0f);
+		res = canal->addFadePoint(parentclock + 500000, 1.0f);
 	}
 
 	//	Todavia en testeo
-	void fadeOut(unsigned long long value) {
-		if (isPlaying()) return;
-		FMOD_RESULT res;
-		unsigned int numPoints = 0;
-		unsigned long long dspClock = 0;
-		float volume = 0;
-		res = canal->getFadePoints(&numPoints, &dspClock, &volume);
-		dspClock += value;
-		ERRCHECK(res);
-		res = canal->addFadePoint(dspClock, volume);
-		ERRCHECK(res);
+	void fadeOut(/*unsigned long long value*/) {
+		////if (!isPlaying()) return;
+		//FMOD_RESULT res;
+		////res = canal->setLoopCount(0);
+		////ERRCHECK(res);
+		//unsigned int numPoints = 0;
+		//unsigned long long dspClock = 0;
+		//float volume = 0;
+		//res = canal->getFadePoints(&numPoints, &dspClock, &volume);
+		//dspClock += value;
+		//ERRCHECK(res);
+		//res = canal->addFadePoint(dspClock, volume);
+		//ERRCHECK(res);
+
+		unsigned long long parentclock;
+		FMOD_RESULT res = canal->getDSPClock(NULL, &parentclock);
+		float vol;
+		canal->getVolume(&vol);
+		res = canal->addFadePoint(parentclock, vol);
+		res = canal->addFadePoint(parentclock + 500000, 0.0f);
 	}
 
 	// Devuelve el nombre del sonido
@@ -260,6 +279,12 @@ public:
 		default:
 			break;
 		}
+	}
+
+	unsigned int getTime() {
+		unsigned int l;
+		sonido->getLength(&l, FMOD_TIMEUNIT_MS);
+		return l;
 	}
 };
 
@@ -399,7 +424,7 @@ public:
 	}
 
 	FMOD_VECTOR getOrientation() {
-		FMOD_VECTOR 
+		FMOD_VECTOR
 			ori;
 		canal->get3DConeOrientation(&ori);
 		return ori;
@@ -428,6 +453,12 @@ public:
 };
 
 
+void elapsedTime(unsigned int t) {
+	int mins = t / 10000;
+	int secs = t / 1000;
+	std::cout << mins << ":" << secs;
+}
+
 bool posValida(int x, int z, distance d) {
 	int posX, posZ;
 	posX = x + d.x;
@@ -454,8 +485,13 @@ void grafica() {
 	std::cout << "Sonidos cargados " << playList.size() << std::endl;
 	int s = playList.size();
 	for (int i = 0; i < s; i++) {
-		if (i == selectionV)
-			std::cout << ">" << playList.at(i)->getName() << "\n";
+		if (i == selectionV) {
+			std::cout << ">" << playList.at(i)->getName();
+			std::cout << "  ";
+			elapsedTime(playList.at(i)->getTime());
+			std::cout << "\n";
+			
+		}
 		else
 			std::cout << playList.at(i)->getName() << "\n";
 	}
@@ -570,10 +606,18 @@ void modificaEfecto(float value, distance* d = nullptr)
 	}
 	case Source::EffectId::Posicional: {
 		Sound3D* sd = dynamic_cast<Sound3D*>(playList.at(selectionV));
-		if (sd != nullptr && posValida((int)round(sd->getSourcePos().x), (int)round(sd->getSourcePos().y),*d)) {
+		if (sd != nullptr && posValida((int)round(sd->getSourcePos().x), (int)round(sd->getSourcePos().y), *d)) {
 			sd->setSourcePos(*d);
 			sd->setSourceOrientation(d->d);
 		}
+		break;
+	}
+	case Source::FadeIn: {
+		playList[selectionH]->fadeIn();
+		break;
+	}
+	case Source::FadeOut: {
+		playList[selectionH]->fadeOut();
 		break;
 	}
 	default:
@@ -614,34 +658,48 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case ENTER: {
-		//dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
-		//playList[selectionV]->play();
-		if (selectionH == 0) {
-			// Aunque esté en PAUSE, también devolverá true isPlaying()
+		switch (selectionH)
+		{
+		case Source::EffectId::Play_Pause: {	//Para dar play o pause
 			if (!(playList[selectionV])->isPlaying()) {
-			//dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
-			playList[selectionV]->play();
+				playList[selectionV]->play();
 			}
 			else {
-				if (playList[selectionV]->isPause()) {
-					playList[selectionV]->setPause(false);
-				}
-				else {
-					playList[selectionV]->setPause(true);
-				}
-					
+				playList[selectionV]->setPause();
 			}
+			break;
+		}
+		case Source::EffectId::Stop: {	//Para para un track
+			if ((playList[selectionV])->isPlaying()) {
+				playList[selectionV]->stop();
+			}
+			break;
+		}
+		case Source::EffectId::FadeOut: {
+			playList[selectionV]->fadeOut();
+			break;
+		}
+		default:
+			break;
 		}
 		break;
 	}
 	case ADD: {
-		if (selectionH != 2)
-			modificaEfecto(1.0f);
+		if ((	selectionH == Source::EffectId::Play_Pause
+			||	selectionH == Source::EffectId::Stop 
+			||	selectionH == Source::EffectId::FadeOut
+			||	selectionH == Source::EffectId::FadeIn) == true) return true;
+
+		modificaEfecto(1.0f);
 		break;
 	}
 	case SUB: {
-		if (selectionH != 2)
-			modificaEfecto(-1.0);
+		if ((selectionH == Source::EffectId::Play_Pause
+			|| selectionH == Source::EffectId::Stop
+			|| selectionH == Source::EffectId::FadeOut
+			|| selectionH == Source::EffectId::FadeIn) == true) return true;
+
+		modificaEfecto(-1.0);
 		break;
 	}
 	case W: {
@@ -1012,8 +1070,30 @@ int main() {
 #pragma endregion
 
 #pragma region Apartado6
+	//std::vector<Comp> s = {
+	//		Comp{ Source::Scooter, true, soundType::sound3D },
+	//};
+	//cargaSonidos(s);
+	//grafica();
+
+	//bool run = true;
+	//while (run)
+	//{
+	//	if (_kbhit()) {
+	//		int c;
+	//		run = gestionaTeclas((c = getch()));
+	//	}
+	//	syst->update();
+	//}
+
+#pragma endregion
+#pragma endregion
+
+#pragma region Practica4
+
+#pragma region Apartado1
 	std::vector<Comp> s = {
-			Comp{ Source::Scooter, true, soundType::sound3D },
+		Comp{ Source::Talking, false, soundType::sound3D },
 	};
 	cargaSonidos(s);
 	grafica();
@@ -1024,23 +1104,13 @@ int main() {
 		if (_kbhit()) {
 			int c;
 			run = gestionaTeclas((c = getch()));
+			playList[selectionV]->fadeOut();
 		}
 		syst->update();
 	}
-
-#pragma endregion
-#pragma endregion
-
-#pragma region Practica4
-
-#pragma region Apartado1
-
 #pragma endregion
 
 #pragma endregion
-
-
-
 
 	FMOD_RESULT res = syst->release();
 	ERRCHECK(res);
