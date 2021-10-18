@@ -24,7 +24,9 @@ public:
 
 	enum EffectId : int
 	{
-		Pitch = 0,
+		Play_Pause = 0,
+		Stop,
+		Pitch,
 		Movement,
 		Volumen,
 		Posicional,

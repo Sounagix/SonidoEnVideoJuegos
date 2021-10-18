@@ -18,6 +18,8 @@ std::vector<Source::SoundID> Source::sonidos{
 };
 
 std::vector<Source::Effect> Source::efectos{
+	{ Play_Pause	,"Play/Pause_Sound"},
+	{ Stop			,"Stop_Sound"},
 	{ Pitch			,"Pitch"},
 	{ Volumen		,"Volumen"},
 	{ Movement		,"Movimiento"},

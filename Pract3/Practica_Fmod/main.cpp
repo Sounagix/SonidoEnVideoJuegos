@@ -124,6 +124,8 @@ protected:
 	//	tiempo actual
 	float currTime = 0.0f;
 
+	bool  _statusPause = false;
+
 public:
 	//	Constructor generico
 	BaseSound() {};
@@ -151,8 +153,11 @@ public:
 	//	Setea a un canal como pausa o no en función de un booleano
 	void setPause(bool status) {
 		canal->setPaused(status);
+		_statusPause = status;
 	}
-
+	bool isPause() {
+		return _statusPause;
+	}
 	//	Cambia el volumen de un sonido *TODO
 	void setVolume(float v) {
 		canal->setVolume(v);
@@ -591,9 +596,24 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case ENTER: {
-		//	TODO* testeo
-		dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
+		//dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
 		//playList[selectionV]->play();
+		if (selectionH == 0) {
+			// Aunque esté en PAUSE, también devolverá true isPlaying()
+			if (!(playList[selectionV])->isPlaying()) {
+			//dynamic_cast<Sound3D*>(playList[selectionV])->play(5.0f, 10.0f, 0.0f);
+			playList[selectionV]->play();
+			}
+			else {
+				if (playList[selectionV]->isPause()) {
+					playList[selectionV]->setPause(false);
+				}
+				else {
+					playList[selectionV]->setPause(true);
+				}
+					
+			}
+		}
 
 		break;
 	}
