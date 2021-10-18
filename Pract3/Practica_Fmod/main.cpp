@@ -614,7 +614,6 @@ bool gestionaTeclas(int c) {
 					
 			}
 		}
-
 		break;
 	}
 	case ADD: {
@@ -629,7 +628,7 @@ bool gestionaTeclas(int c) {
 	}
 	case W: {
 		//	Para el efecto movimiento
-		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
+		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
 			distance forward = {
 				orientation::forward, 0.0f, 0.0f, -1.0f
 			};
@@ -638,7 +637,7 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case A: {
-		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
+		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
 			distance left = {
 				orientation::left, -1.0f, 0.0f, 0.0f
 			};
@@ -647,7 +646,7 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case S: {
-		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
+		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
 			distance back = {
 				orientation::back, 0.0f, 0.0f, 1.0f
 			};
@@ -656,7 +655,7 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case D: {
-		if ((selectionH == 2 || selectionH == 3) && playList[selectionV]->isPlaying()) {
+		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
 			distance right = {
 				orientation::right, 1.0f, 0.0f, 0.0f
 			};
