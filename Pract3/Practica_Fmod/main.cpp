@@ -187,6 +187,24 @@ public:
 		return active;
 	}
 
+	void fadeIn() {
+
+	}
+
+	//	Todavia en testeo
+	void fadeOut(unsigned long long value) {
+		if (isPlaying()) return;
+		FMOD_RESULT res;
+		unsigned int numPoints = 0;
+		unsigned long long dspClock = 0;
+		float volume = 0;
+		res = canal->getFadePoints(&numPoints, &dspClock, &volume);
+		dspClock += value;
+		ERRCHECK(res);
+		res = canal->addFadePoint(dspClock, volume);
+		ERRCHECK(res);
+	}
+
 	// Devuelve el nombre del sonido
 	std::string getName() {
 		return nombre;
@@ -764,6 +782,8 @@ int main() {
 		ERRCHECK(res);
 	}
 	initListener();
+
+#pragma region Practica3
 #pragma region Apartado1
 	//Sound2D* battle = new Sound2D(Source::sonidos[Source::Battle].ruta.c_str());
 	//Sound3D* gun1 = new Sound3D(Source::sonidos[Source::Gun1].ruta.c_str());
@@ -1009,6 +1029,18 @@ int main() {
 	}
 
 #pragma endregion
+#pragma endregion
+
+#pragma region Practica4
+
+#pragma region Apartado1
+
+#pragma endregion
+
+#pragma endregion
+
+
+
 
 	FMOD_RESULT res = syst->release();
 	ERRCHECK(res);
