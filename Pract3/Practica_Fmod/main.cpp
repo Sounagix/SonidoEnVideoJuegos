@@ -195,33 +195,22 @@ public:
 	}
 
 	void fadeIn() {
+		play();
 		unsigned long long parentclock;
 		FMOD_RESULT res = canal->getDSPClock(NULL, &parentclock);
 		res = canal->addFadePoint(parentclock, 0.0f);
-		res = canal->addFadePoint(parentclock + 500000, 1.0f);
+		res = canal->addFadePoint(parentclock + 100000, 1.0f);
 	}
 
 	//	Todavia en testeo
 	void fadeOut(/*unsigned long long value*/) {
-		////if (!isPlaying()) return;
-		//FMOD_RESULT res;
-		////res = canal->setLoopCount(0);
-		////ERRCHECK(res);
-		//unsigned int numPoints = 0;
-		//unsigned long long dspClock = 0;
-		//float volume = 0;
-		//res = canal->getFadePoints(&numPoints, &dspClock, &volume);
-		//dspClock += value;
-		//ERRCHECK(res);
-		//res = canal->addFadePoint(dspClock, volume);
-		//ERRCHECK(res);
-
+		if (!isPlaying()) return;
 		unsigned long long parentclock;
 		FMOD_RESULT res = canal->getDSPClock(NULL, &parentclock);
 		float vol;
 		canal->getVolume(&vol);
 		res = canal->addFadePoint(parentclock, vol);
-		res = canal->addFadePoint(parentclock + 500000, 0.0f);
+		res = canal->addFadePoint(parentclock + 100000, 0.0f);
 	}
 
 	// Devuelve el nombre del sonido
@@ -284,6 +273,10 @@ public:
 	unsigned int getTime() {
 		unsigned int l;
 		sonido->getLength(&l, FMOD_TIMEUNIT_MS);
+		//unsigned long long parentclock;
+		//unsigned int time;
+ 		//FMOD_RESULT res = canal->getPosition(&time, FMOD_TIMEUNIT_MS);
+		//std::cout << time;
 		return l;
 	}
 };
@@ -490,7 +483,6 @@ void grafica() {
 			std::cout << "  ";
 			elapsedTime(playList.at(i)->getTime());
 			std::cout << "\n";
-			
 		}
 		else
 			std::cout << playList.at(i)->getName() << "\n";
@@ -679,6 +671,10 @@ bool gestionaTeclas(int c) {
 			playList[selectionV]->fadeOut();
 			break;
 		}
+		case Source::EffectId::FadeIn: {
+			playList[selectionV]->fadeIn();
+			break;
+		}
 		default:
 			break;
 		}
@@ -808,14 +804,12 @@ void cargaSonidos(const std::vector<Comp> s) {
 		{
 			Sound2D* s2D = new Sound2D(Source::sonidos[s[i].r].ruta.c_str(),
 				Source::sonidos[s[i].r].nombre, s[i].loop);
-			//playList.push_back(s2D);
 			break;
 		}
 		case soundType::sound3D:
 		{
 			Sound3D* s3D = new Sound3D(Source::sonidos[s[i].r].ruta.c_str(),
 				Source::sonidos[s[i].r].nombre, s[i].loop);
-			//playList.push_back(s3D);
 			break;
 		}
 		default:
@@ -1093,7 +1087,7 @@ int main() {
 
 #pragma region Apartado1
 	std::vector<Comp> s = {
-		Comp{ Source::Talking, false, soundType::sound3D },
+		Comp{ Source::Scooter , false, soundType::sound3D },
 	};
 	cargaSonidos(s);
 	grafica();
@@ -1104,7 +1098,6 @@ int main() {
 		if (_kbhit()) {
 			int c;
 			run = gestionaTeclas((c = getch()));
-			playList[selectionV]->fadeOut();
 		}
 		syst->update();
 	}
