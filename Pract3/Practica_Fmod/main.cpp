@@ -20,10 +20,16 @@
 #define ENTER 13		
 #define ADD 43			
 #define SUB 45			
+//	Movimiento del listener
 #define W 119			
 #define A 97			
 #define S 115			
 #define D 100	
+//	Movimiento del source
+#define J 106	
+#define K 107	
+#define L 108	
+#define I 105	
 
 #define Z 122
 #define X 120
@@ -49,7 +55,14 @@ enum orientation {
 	forward,
 	back,
 	left,
-	right
+	right,
+	oNone
+};
+
+enum movType {
+	listener,
+	source,
+	mNone
 };
 
 // Determina el tipo de Loop con el metodo
@@ -361,43 +374,6 @@ public:
 		canal->set3DAttributes(&pos, &vel);
 	}
 
-	//	Setea una posición del listener
-	void setListenerPos(distance d) {
-		FMOD_VECTOR
-			pos,
-			vel,
-			forw,
-			upD;
-
-		syst->get3DListenerAttributes(0, &pos, &vel, &forw, &upD);
-
-		d.x += pos.x;
-		d.y += pos.y;
-		d.z += pos.z;
-
-
-		FMOD_VECTOR
-			listenerPos = { d.x,d.y,d.z },// posicion del listener
-			listenerVel = { 0,0,0 },		// velocidad del listener
-			up = { 0,1,0 },					// vector up: hacia la ``coronilla''
-			at = { 1,0,0 };					// vector at: hacia donde mira
-		// colocamos listener
-
-		syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
-	}
-
-	//	Devuelve la posición del listener
-	FMOD_VECTOR getListenerPos() {
-		FMOD_VECTOR
-			pos,
-			vel,
-			forw,
-			up;
-
-		syst->get3DListenerAttributes(0, &pos, &vel, &forw, &up);
-		return pos;
-	}
-
 	//	Devuelve la posición del listener
 	FMOD_VECTOR getSourcePos() {
 		FMOD_VECTOR
@@ -445,6 +421,43 @@ public:
 
 };
 
+
+//	Setea una posición del listener
+void setListenerPos(distance d) {
+	FMOD_VECTOR
+		pos,
+		vel,
+		forw,
+		upD;
+
+	syst->get3DListenerAttributes(0, &pos, &vel, &forw, &upD);
+
+	d.x += pos.x;
+	d.y += pos.y;
+	d.z += pos.z;
+
+
+	FMOD_VECTOR
+		listenerPos = { d.x,d.y,d.z },// posicion del listener
+		listenerVel = { 0,0,0 },		// velocidad del listener
+		up = { 0,1,0 },					// vector up: hacia la ``coronilla''
+		at = { 1,0,0 };					// vector at: hacia donde mira
+	// colocamos listener
+
+	syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+}
+
+//	Devuelve la posición del listener
+FMOD_VECTOR getListenerPos() {
+	FMOD_VECTOR
+		pos,
+		vel,
+		forw,
+		up;
+
+	syst->get3DListenerAttributes(0, &pos, &vel, &forw, &up);
+	return pos;
+}
 
 void elapsedTime(unsigned int t) {
 	int mins = t / 10000;
@@ -500,6 +513,61 @@ void grafica() {
 	std::cout << "\n\n";
 }
 
+void graficaTablero() {
+	Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+	std::cout << "Pos List " << " x: " << getListenerPos().x << " z: " << getListenerPos().z << std::endl;
+	std::cout << "Pos Sour " << " x: " << s->getSourcePos().x << " z: " << s->getSourcePos().z << std::endl;
+
+	std::tuple<float, float, float> t = s->getConeInfo();
+
+	std::cout << "Cone in " << (std::get<0>(t));
+	std::cout << "	Cone out " << (std::get<1>(t));
+	std::cout << "	Cone out Volumen " << (std::get<2>(t)) << "\n";
+
+
+	for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
+		for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
+
+			if (getListenerPos().x == x && getListenerPos().z == y) {
+				std::cout << "L ";
+			}
+			else if ((int)s->getSourcePos().x == y && (int)s->getSourcePos().z == x) {
+				std::cout << "S ";
+			}
+			else
+			{
+				std::cout << ". ";
+			}
+		}
+		std::cout << std::endl;
+	}
+}
+
+void graficaTableroElemental() {
+	FMOD_VECTOR
+		lPos = getListenerPos();
+	Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+	if (s == nullptr) return;
+	FMOD_VECTOR
+		SPos = s->getSourcePos();
+
+	for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
+		for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
+			if (lPos.x == x && lPos.z == y){
+				std::cout << "L ";
+			}
+			else if ((int)SPos.x == y && (int)SPos.z == x) {
+				std::cout << "S ";
+			}
+			else
+			{
+				std::cout << ". ";
+			}
+		}
+		std::cout << std::endl;
+	}
+}
+
 void muestraEfecto() {
 
 	grafica();
@@ -543,35 +611,7 @@ void muestraEfecto() {
 		break;
 	}
 	case Source::EffectId::Posicional: {
-
-		Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
-		std::cout << "Pos List " << " x: " << s->getListenerPos().x << " z: " << s->getListenerPos().z << std::endl;
-		std::cout << "Pos Sour " << " x: " << s->getSourcePos().x << " z: " << s->getSourcePos().z << std::endl;
-
-		std::tuple<float, float, float> t = s->getConeInfo();
-
-		std::cout << "Cone in " << (std::get<0>(t));
-		std::cout << "	Cone out " << (std::get<1>(t));
-		std::cout << "	Cone out Volumen " << (std::get<2>(t)) << "\n";
-
-
-		for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
-			for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
-
-				if ((int)s->getListenerPos().x == x && (int)s->getListenerPos().z == y) {
-					std::cout << "L ";
-				}
-				else if ((int)s->getSourcePos().x == y && (int)s->getSourcePos().z == x) {
-					std::cout << "S ";
-				}
-				else
-				{
-					std::cout << ". ";
-				}
-			}
-			std::cout << std::endl;
-		}
-
+		graficaTablero();
 		break;
 	}
 	default:
@@ -580,7 +620,7 @@ void muestraEfecto() {
 	//std::cout << playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
 }
 
-void modificaEfecto(float value, distance* d = nullptr)
+void modificaEfecto(float value, distance* d = nullptr, movType t = movType::mNone)
 {
 	switch (Source::efectos[selectionH].effect)
 	{
@@ -593,7 +633,7 @@ void modificaEfecto(float value, distance* d = nullptr)
 		break;
 	}
 	case Source::EffectId::Movement: {
-		static_cast<Sound3D*>(playList.at(selectionV))->setListenerPos(*d);
+		setListenerPos(*d);
 		break;
 	}
 	case Source::EffectId::Posicional: {
@@ -612,11 +652,28 @@ void modificaEfecto(float value, distance* d = nullptr)
 		playList[selectionH]->fadeOut();
 		break;
 	}
+	case Source::EffectId::Move3DElemt: {
+		switch (t)
+		{
+		case listener: {
+			setListenerPos(*d);
+			break;
+		}
+		case source: {
+			break;
+		}
+		default:
+			break;
+		}
+		break;
+	}
 	default:
 		break;
 	}
 	muestraEfecto();
 }
+
+
 
 bool gestionaTeclas(int c) {
 	switch (c)
@@ -675,6 +732,22 @@ bool gestionaTeclas(int c) {
 			playList[selectionV]->fadeIn();
 			break;
 		}
+		case Source::EffectId::Move3DElemt: {
+			if (!playList[selectionV]->isPlaying())
+				playList[selectionV]->play();
+			distance d = {
+				orientation::oNone, -5.0f, 0.0f, 0.0f
+			};
+			setListenerPos(d);
+			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+			if (s == nullptr) ERRCHECK(FMOD_RESULT::FMOD_ERR_DSP_INUSE);
+			distance sD = {
+				orientation::oNone, 0.0f, 0.0f, 5.0f
+			};
+			s->setSourcePos(sD);
+			graficaTableroElemental();
+			break;
+		}
 		default:
 			break;
 		}
@@ -700,8 +773,8 @@ bool gestionaTeclas(int c) {
 	}
 	case W: {
 		//	Para el efecto movimiento
-		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
-			distance forward = {
+		if (selectionH == Source::EffectId::Movement || selectionH ==Source::EffectId::Move3DElemt) {
+				distance forward = {
 				orientation::forward, 0.0f, 0.0f, -1.0f
 			};
 			modificaEfecto(0, &forward);
@@ -733,6 +806,18 @@ bool gestionaTeclas(int c) {
 			};
 			modificaEfecto(0, &right);
 		}
+		break;
+	}
+	case J: {
+		break;
+	}
+	case K: {
+		break;
+	}
+	case L: {
+		break;
+	}
+	case I: {
 		break;
 	}
 	case Z: {
@@ -1087,7 +1172,7 @@ int main() {
 
 #pragma region Apartado1
 	std::vector<Comp> s = {
-		Comp{ Source::Scooter , false, soundType::sound3D },
+		Comp{ Source::FootStep , true, soundType::sound3D },
 	};
 	cargaSonidos(s);
 	grafica();

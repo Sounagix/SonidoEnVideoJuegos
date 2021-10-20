@@ -32,6 +32,7 @@ public:
 		Posicional,
 		FadeIn,
 		FadeOut,
+		Move3DElemt,
 	};
 
 	struct SoundID

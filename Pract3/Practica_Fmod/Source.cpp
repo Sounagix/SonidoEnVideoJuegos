@@ -26,4 +26,5 @@ std::vector<Source::Effect> Source::efectos{
 	{ Posicional	,"Posicional"},
 	{ FadeIn		,"FadeIn"},
 	{ FadeOut		,"FadeOut"},
+	{ Move3DElemt	,"Movimiento3D"},
 };
