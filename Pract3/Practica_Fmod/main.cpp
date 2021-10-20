@@ -288,7 +288,7 @@ public:
 		sonido->getLength(&l, FMOD_TIMEUNIT_MS);
 		//unsigned long long parentclock;
 		//unsigned int time;
- 		//FMOD_RESULT res = canal->getPosition(&time, FMOD_TIMEUNIT_MS);
+		//FMOD_RESULT res = canal->getPosition(&time, FMOD_TIMEUNIT_MS);
 		//std::cout << time;
 		return l;
 	}
@@ -553,7 +553,7 @@ void graficaTableroElemental() {
 
 	for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
 		for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
-			if (lPos.x == x && lPos.z == y){
+			if (lPos.x == x && lPos.z == y) {
 				std::cout << "L ";
 			}
 			else if ((int)SPos.x == y && (int)SPos.z == x) {
@@ -612,6 +612,10 @@ void muestraEfecto() {
 	}
 	case Source::EffectId::Posicional: {
 		graficaTablero();
+		break;
+	}
+	case Source::EffectId::Move3DElemt: {
+		graficaTableroElemental();
 		break;
 	}
 	default:
@@ -754,10 +758,10 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case ADD: {
-		if ((	selectionH == Source::EffectId::Play_Pause
-			||	selectionH == Source::EffectId::Stop 
-			||	selectionH == Source::EffectId::FadeOut
-			||	selectionH == Source::EffectId::FadeIn) == true) return true;
+		if ((selectionH == Source::EffectId::Play_Pause
+			|| selectionH == Source::EffectId::Stop
+			|| selectionH == Source::EffectId::FadeOut
+			|| selectionH == Source::EffectId::FadeIn) == true) return true;
 
 		modificaEfecto(1.0f);
 		break;
@@ -773,51 +777,99 @@ bool gestionaTeclas(int c) {
 	}
 	case W: {
 		//	Para el efecto movimiento
-		if (selectionH == Source::EffectId::Movement || selectionH ==Source::EffectId::Move3DElemt) {
-				distance forward = {
+		if (selectionH == Source::EffectId::Movement) {
+			distance forward = {
 				orientation::forward, 0.0f, 0.0f, -1.0f
 			};
 			modificaEfecto(0, &forward);
 		}
+		else if (selectionH == Source::EffectId::Move3DElemt) {
+			distance forward = {
+				orientation::forward, 0.0f, 0.0f, -1.0f
+			};
+			modificaEfecto(0, &forward, movType::listener);
+		}
 		break;
 	}
 	case A: {
-		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
+		if (selectionH == Source::EffectId::Movement) {
 			distance left = {
 				orientation::left, -1.0f, 0.0f, 0.0f
 			};
 			modificaEfecto(0, &left);
 		}
+		else if (selectionH == Source::EffectId::Move3DElemt) {
+			distance left = {
+				orientation::left, -1.0f, 0.0f, 0.0f
+			};
+			modificaEfecto(0, &left, movType::listener);
+		}
 		break;
 	}
 	case S: {
-		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
+		if (selectionH == Source::EffectId::Movement) {
 			distance back = {
 				orientation::back, 0.0f, 0.0f, 1.0f
 			};
 			modificaEfecto(0, &back);
 		}
+		else if (selectionH == Source::EffectId::Move3DElemt) {
+			distance back = {
+				orientation::back, 0.0f, 0.0f, 1.0f
+			};
+			modificaEfecto(0, &back, movType::listener);
+		}
 		break;
 	}
 	case D: {
-		if ((selectionH == 4 || selectionH == 5) && playList[selectionV]->isPlaying()) {
+		if (selectionH == Source::EffectId::Movement) {
 			distance right = {
 				orientation::right, 1.0f, 0.0f, 0.0f
 			};
 			modificaEfecto(0, &right);
 		}
+		else if (selectionH == Source::EffectId::Move3DElemt) {
+			distance right = {
+				orientation::right, 1.0f, 0.0f, 0.0f
+			};
+			modificaEfecto(0, &right, movType::listener);
+		}
 		break;
 	}
 	case J: {
+		if (selectionH == Source::EffectId::Move3DElemt) {
+			distance left = {
+				orientation::right, -1.0f, 0.0f, 0.0f
+			};
+			modificaEfecto(0, &left, movType::source);
+		}
 		break;
 	}
 	case K: {
+		if (selectionH == Source::EffectId::Move3DElemt) {
+			distance back = {
+				orientation::back, 0.0f, 0.0f, 1.0f
+			};
+			modificaEfecto(0, &back, movType::source);
+		}
 		break;
 	}
 	case L: {
+		if (selectionH == Source::EffectId::Move3DElemt) {
+			distance right = {
+				orientation::right, 1.0f, 0.0f, 0.0f
+			};
+			modificaEfecto(0, &right, movType::source);
+		}
 		break;
 	}
 	case I: {
+		if (selectionH == Source::EffectId::Move3DElemt) {
+			distance forward = {
+				orientation::forward, 0.0f, 0.0f, -1.0f
+			};
+			modificaEfecto(0, &forward, movType::source);
+		}
 		break;
 	}
 	case Z: {
