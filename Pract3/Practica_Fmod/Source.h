@@ -39,7 +39,8 @@ public:
 		ConeIn = 0,
 		ConeOut,
 		ConeOrientation,
-		ConeDistance,
+		MinDistance3D,
+		MaxDistance3D,
 		SubSize
 	};
 

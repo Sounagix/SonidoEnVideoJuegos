@@ -40,6 +40,12 @@
 #define M 109	
 #define COMA 44	
 
+//	teclas para mover las direcciones de los conos
+#define ARRIBA		56
+#define ABAJO		50
+#define IZQUIERDA	52
+#define DERECHA		54
+
 using namespace FMOD;
 System* syst;
 
@@ -57,6 +63,7 @@ enum orientation {
 	left,
 	right,
 	oNone
+
 };
 
 enum movType {
@@ -87,6 +94,7 @@ struct Comp
 	bool loop = false;
 	soundType sT;
 };
+
 
 
 //	Lista de todos los sonidos cargados
@@ -415,6 +423,24 @@ public:
 		canal->get3DConeOrientation(&ori);
 		return ori;
 	}
+
+	void setDistance(float min, float max) {
+		//float minDistance;
+		//float maxDistance;
+		//if (min == -1.0f) {
+		//	canal->get3DMinMaxDistance(&minDistance, &maxDistance);
+		//	
+		//}
+		canal->set3DMinMaxDistance(min, max);
+	}
+
+	//	min, max
+	std::pair<float, float> getDistance() {
+		float minDistance;
+		float maxDistance;
+		canal->get3DMinMaxDistance(&minDistance, &maxDistance);
+		return std::pair<float, float>(minDistance,maxDistance);
+	}
 };
 
 class Sound2D : public BaseSound {
@@ -438,9 +464,29 @@ public:
 
 };
 
+orientation toOrientation(FMOD_VECTOR v) {
+	if (v.x == 0) {
+		if (v.z == 1) {
+			return orientation::forward;
+		}
+		else if (v.z == -1) {
+			return orientation::back;
+		}
+	}
+	else if (v.z == 0) {
+		if (v.x == 1) {
+			return orientation::right;
+		}
+		else if (v.x == -1) {
+			return orientation::left;
+		}
+	}
+	return orientation::oNone;
+}
+
 //	Detiene todos los sonidos de la playList
 void stopPlaylist() {
-	for(auto s : playList) {
+	for (auto s : playList) {
 		s->stop();
 	}
 }
@@ -515,11 +561,12 @@ void graficaStats() {
 	Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
 	std::cout << "Listener(L): asdw    ";
 	std::cout << "Source(S): jkli	";
+	std::cout << "Orientacion: 8624 " << s->getOrientation().x << "," << s->getOrientation().z << "  ";
 	std::cout << "x symemetry	";
 	std::cout << "1-2: reverbs	 ";
 	std::cout << "z exit \n";
-	std::cout << "minD: 2	";	//TODO
-	std::cout << "minX: 10	 ";	//TODO
+	std::cout << "minD:	" << s->getDistance().first << "  ";
+	std::cout << "maxD: " << s->getDistance().second <<"  ";
 	std::cout << "ConeI: " << std::get<0>(s->getConeInfo()) << "   ";
 	std::cout << "ConeO: " << std::get<1>(s->getConeInfo()) << " \n";
 
@@ -598,6 +645,25 @@ void graficaTableroElemental() {
 				std::cout << "L ";
 			}
 			else if ((int)SPos.x == y && (int)SPos.z == x) {
+				//FMOD_VECTOR
+				//	orient = s->getOrientation();
+				//switch (toOrientation(orient))
+				//{
+				//case orientation::back: {
+				//	break;
+				//}
+				//case orientation::forward: {
+				//	break;
+				//}				
+				//case orientation::left: {
+				//	break;
+				//}				
+				//case orientation::right: {
+				//	break;
+				//}
+				//default:
+				//	break;
+				//}
 				std::cout << "S ";
 			}
 			else
@@ -791,6 +857,62 @@ bool gestionaTeclas(int c) {
 		}
 		break;
 	}
+	case ARRIBA: {
+		if (subMenuActive && subMenu == Source::EffectIdSubMenu::ConeOrientation) {
+			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+			FMOD_VECTOR
+				pos = s->getSourcePos();
+
+			if (pos.x > MIN_WIDTH && pos.x < MAX_WIDTH && pos.z > MIN_HEIGHT && pos.z < MAX_WIDTH) {
+				orientation forward = orientation::forward;
+				s->setSourceOrientation(forward);
+			}
+			graficaMovimiento3D();
+		}
+		break;
+	}
+	case ABAJO: {
+		if (subMenuActive && subMenu == Source::EffectIdSubMenu::ConeOrientation) {
+			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+			FMOD_VECTOR
+				pos = s->getSourcePos();
+
+			if (pos.x > MIN_WIDTH && pos.x < MAX_WIDTH && pos.z > MIN_HEIGHT && pos.z < MAX_WIDTH) {
+				orientation back = orientation::back;
+				s->setSourceOrientation(back);
+			}
+			graficaMovimiento3D();
+		}
+		break;
+	}
+	case IZQUIERDA: {
+		if (subMenuActive && subMenu == Source::EffectIdSubMenu::ConeOrientation) {
+			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+			FMOD_VECTOR
+				pos = s->getSourcePos();
+
+			if (pos.x > MIN_WIDTH && pos.x < MAX_WIDTH && pos.z > MIN_HEIGHT && pos.z < MAX_WIDTH) {
+				orientation left = orientation::left;
+				s->setSourceOrientation(left);
+			}
+			graficaMovimiento3D();
+		}
+		break;
+	}
+	case DERECHA: {
+		if (subMenuActive && subMenu == Source::EffectIdSubMenu::ConeOrientation) {
+			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+			FMOD_VECTOR
+				pos = s->getSourcePos();
+
+			if (pos.x > MIN_WIDTH && pos.x < MAX_WIDTH && pos.z > MIN_HEIGHT && pos.z < MAX_WIDTH) {
+				orientation right = orientation::right;
+				s->setSourceOrientation(right);
+			}
+			graficaMovimiento3D();
+		}
+		break;
+	}
 	case ENTER: {
 		switch (selectionH)
 		{
@@ -842,7 +964,7 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case ADD: {
-		
+
 		if (subMenuActive) {
 			switch (subMenu)
 			{
@@ -864,10 +986,16 @@ bool gestionaTeclas(int c) {
 					s->setSourceConeAngle(-1.0f, cone);
 				break;
 			}
-			case Source::EffectIdSubMenu::ConeOrientation: {
+			case Source::EffectIdSubMenu::MinDistance3D: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				s->setDistance(s->getDistance().first + 1.0f, s->getDistance().second);
 				break;
 			}
-			case Source::EffectIdSubMenu::ConeDistance: {
+			case Source::EffectIdSubMenu::MaxDistance3D: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				s->setDistance(s->getDistance().first, s->getDistance().second + 1.0f);
 				break;
 			}
 			default:
@@ -897,7 +1025,7 @@ bool gestionaTeclas(int c) {
 				if (s == nullptr) return true;
 				std::tuple<float, float, float> t = s->getConeInfo();
 				float cone = std::get<0>(t) -= 1.0f;
-				if(cone <= std::get<1>(t))
+				if (cone <= std::get<1>(t))
 					s->setSourceConeAngle(cone);
 				break;
 			}
@@ -907,13 +1035,19 @@ bool gestionaTeclas(int c) {
 				std::tuple<float, float, float> t = s->getConeInfo();
 				float cone = std::get<1>(t) -= 1.0f;
 				if (cone >= std::get<0>(t))
-					s->setSourceConeAngle(-1.0f,cone);
+					s->setSourceConeAngle(-1.0f, cone);
 				break;
 			}
-			case Source::EffectIdSubMenu::ConeOrientation: {
+			case Source::EffectIdSubMenu::MaxDistance3D: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				s->setDistance(s->getDistance().first, s->getDistance().second - 1.0f);
 				break;
 			}
-			case Source::EffectIdSubMenu::ConeDistance: {
+			case Source::EffectIdSubMenu::MinDistance3D: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				s->setDistance(s->getDistance().first - 1.0f, s->getDistance().second);
 				break;
 			}
 			default:

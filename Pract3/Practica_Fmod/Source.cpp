@@ -40,5 +40,6 @@ std::vector<Source::SubMenuEffects> Source::subMenu{
 	{ConeIn				,"cambia angulo int"},
 	{ConeOut			,"Cambio angulo ext"},
 	{ConeOrientation	,"Cambio cono orient"},
-	{ConeDistance		,"Distancia del cono"},
+	{MinDistance3D		,"Minima distancia"},
+	{MaxDistance3D		,"Maxima distancia"},
 };
