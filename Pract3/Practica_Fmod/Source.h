@@ -32,7 +32,25 @@ public:
 		Posicional,
 		FadeIn,
 		FadeOut,
-		Move3DElemt,
+		Move3DElemt
+	};
+
+	enum EffectIdSubMenu : int {
+		ConeIn = 0,
+		ConeOut,
+		ConeOrientation,
+		ConeDistance,
+		SubSize
+	};
+
+
+	enum PosEffects : int
+	{
+		MinDistance = 0,
+		MaxDistance,
+		ConeI,
+		ConeO,
+		SizeEf
 	};
 
 	struct SoundID
@@ -50,7 +68,21 @@ public:
 		std::string name;
 	};
 
+	struct PosEffectStruct
+	{
+		PosEffects f;
+		std::string name;
+	};
+
+	struct SubMenuEffects
+	{
+		EffectIdSubMenu f;
+		std::string name;
+	};
+
 	static std::vector<SoundID> sonidos;
 	static std::vector<Effect> efectos;
+	static std::vector<PosEffectStruct> posEfectos;
+	static std::vector<SubMenuEffects> subMenu;
 };
 

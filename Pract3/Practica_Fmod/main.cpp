@@ -95,6 +95,10 @@ std::vector<BaseSound*> playList;
 int selectionH = 0;
 //	index para las sonidos cargados
 int selectionV = 0;
+//	index para el submenu
+int subMenu = 0;
+//	Si el subMenu está activo
+bool subMenuActive = false;
 
 //	Máxima anchura que el emisor se puede desplazar
 const int MAX_WIDTH = 20;
@@ -137,8 +141,6 @@ protected:
 	//	tiempo actual
 	float currTime = 0.0f;
 
-	bool  _statusPause = false;
-
 public:
 	//	Constructor generico
 	BaseSound() {};
@@ -177,7 +179,9 @@ public:
 		canal->setVolume(v);
 	}
 
+	//	Para un source
 	void stop() {
+		if (!isPlaying()) return;
 		FMOD_RESULT res;
 		res = canal->stop();
 		ERRCHECK(res);
@@ -207,6 +211,7 @@ public:
 		return active;
 	}
 
+	//	Aplica el efecto de fadeIn
 	void fadeIn() {
 		play();
 		unsigned long long parentclock;
@@ -215,7 +220,7 @@ public:
 		res = canal->addFadePoint(parentclock + 100000, 1.0f);
 	}
 
-	//	Todavia en testeo
+	//	Apica el efecto de fadeOut
 	void fadeOut(/*unsigned long long value*/) {
 		if (!isPlaying()) return;
 		unsigned long long parentclock;
@@ -227,7 +232,7 @@ public:
 	}
 
 	// Devuelve el nombre del sonido
-	std::string getName() {
+	inline std::string getName() {
 		return nombre;
 	}
 
@@ -327,11 +332,23 @@ public:
 	};
 
 	//	Setea los conos correspondiente al canal
-	void setSourceConeAngle(float insCone = 0.0f, float outCone = 0.0f, float outSideVol = 0.0f) {
+	void setSourceConeAngle(float insCone = -1.0f, float outCone = -1.0f, float outSideVol = -1.0f) {
 		bool playing;
 		canal->isPlaying(&playing);
-		if (playing)
-			canal->set3DConeSettings(insCone, outCone, outSideVol);
+		if (playing) {
+			std::tuple<float, float, float> t = getConeInfo();
+			if (insCone == -1.0f) {
+				insCone = std::get<0>(t);
+			}
+			if (outCone == -1.0f) {
+				outCone = std::get<1>(t);
+			}
+			if (outSideVol == -1.0f) {
+				outSideVol = std::get<2>(t);
+			}
+			FMOD_RESULT res = canal->set3DConeSettings(insCone, outCone, outSideVol);
+			ERRCHECK(res);
+		}
 	}
 
 	//	Setea la orientación en un espacio 2D sobre un sonido 3D
@@ -421,6 +438,12 @@ public:
 
 };
 
+//	Detiene todos los sonidos de la playList
+void stopPlaylist() {
+	for(auto s : playList) {
+		s->stop();
+	}
+}
 
 //	Setea una posición del listener
 void setListenerPos(distance d) {
@@ -459,6 +482,7 @@ FMOD_VECTOR getListenerPos() {
 	return pos;
 }
 
+//	Convierte los milisegundos en tiempo standart
 void elapsedTime(unsigned int t) {
 	int mins = t / 10000;
 	int secs = t / 1000;
@@ -472,6 +496,7 @@ bool posValida(int x, int z, distance d) {
 	return posX < MAX_WIDTH&& posX > MIN_WIDTH && posZ < MAX_HEIGHT&& posZ > MIN_HEIGHT ? true : false;
 }
 
+//	Inicializa al listener
 void initListener() {
 
 	FMOD_RESULT res;
@@ -485,8 +510,23 @@ void initListener() {
 	ERRCHECK(res);
 }
 
+//	Imprime los valores que se muestran debajo del grid de puntos
+void graficaStats() {
+	Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+	std::cout << "Listener(L): asdw    ";
+	std::cout << "Source(S): jkli	";
+	std::cout << "x symemetry	";
+	std::cout << "1-2: reverbs	 ";
+	std::cout << "z exit \n";
+	std::cout << "minD: 2	";	//TODO
+	std::cout << "minX: 10	 ";	//TODO
+	std::cout << "ConeI: " << std::get<0>(s->getConeInfo()) << "   ";
+	std::cout << "ConeO: " << std::get<1>(s->getConeInfo()) << " \n";
+
+}
+
 //	Muestra en pantalla los sonidos cargar y los efectos activos
-void grafica() {
+void graficaPlayList() {
 	system("CLS");
 	std::cout << "Sonidos cargados " << playList.size() << std::endl;
 	int s = playList.size();
@@ -513,6 +553,7 @@ void grafica() {
 	std::cout << "\n\n";
 }
 
+//	Imprime el tablero
 void graficaTablero() {
 	Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
 	std::cout << "Pos List " << " x: " << getListenerPos().x << " z: " << getListenerPos().z << std::endl;
@@ -568,9 +609,29 @@ void graficaTableroElemental() {
 	}
 }
 
+void graficaSubMenuMovimiento3D() {
+	for (int i = 0; i < Source::subMenu.size(); i++) {
+		if (i == subMenu) {
+			std::cout << ">" << Source::subMenu[subMenu].name << "  ";
+		}
+		else
+		{
+			std::cout << Source::subMenu[subMenu].name << "  ";
+		}
+	}
+	std::cout << "\n";
+}
+
+void graficaMovimiento3D() {
+	system("CLS");
+	graficaTableroElemental();
+	graficaStats();
+	graficaSubMenuMovimiento3D();
+}
+
 void muestraEfecto() {
 
-	grafica();
+	graficaPlayList();
 	switch (Source::efectos[selectionH].effect)
 	{
 	case Source::EffectId::Pitch: {
@@ -615,13 +676,12 @@ void muestraEfecto() {
 		break;
 	}
 	case Source::EffectId::Move3DElemt: {
-		graficaTableroElemental();
+		graficaMovimiento3D();
 		break;
 	}
 	default:
 		break;
 	}
-	//std::cout << playList.at(selectionV)->getEfect(Source::efectos[selectionH].effect);
 }
 
 void modificaEfecto(float value, distance* d = nullptr, movType t = movType::mNone)
@@ -664,6 +724,10 @@ void modificaEfecto(float value, distance* d = nullptr, movType t = movType::mNo
 			break;
 		}
 		case source: {
+			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+			if (s != nullptr) {
+				s->setSourcePos(*d);
+			}
 			break;
 		}
 		default:
@@ -677,8 +741,6 @@ void modificaEfecto(float value, distance* d = nullptr, movType t = movType::mNo
 	muestraEfecto();
 }
 
-
-
 bool gestionaTeclas(int c) {
 	switch (c)
 	{
@@ -686,28 +748,47 @@ bool gestionaTeclas(int c) {
 		selectionV += 1;
 		if (selectionV >= playList.size())
 			selectionV = 0;
-		grafica();
+		graficaPlayList();
 		break;
 	}
 	case KEY_UP: {
 		selectionV -= 1;
 		if (selectionV < 0)
 			selectionV = playList.size() - 1;
-		grafica();
+		graficaPlayList();
 		break;
 	}
 	case KEY_LEFT: {
-		selectionH -= 1;
-		if (selectionH < 0)
-			selectionH = Source::efectos.size() - 1;
-		grafica();
+		if (subMenuActive) {
+			subMenu -= 1;
+			if (subMenu < 0) {
+				subMenu = Source::subMenu.size() - 1;
+			}
+			graficaMovimiento3D();
+		}
+		else
+		{
+			selectionH -= 1;
+			if (selectionH < 0)
+				selectionH = Source::efectos.size() - 1;
+			graficaPlayList();
+		}
 		break;
 	}
 	case KEY_RIGHT: {
-		selectionH += 1;
-		if (selectionH >= Source::efectos.size())
-			selectionH = 0;
-		grafica();
+		if (subMenuActive) {
+			subMenu += 1;
+			if (subMenu >= Source::subMenu.size()) {
+				subMenu = 0;
+			}
+			graficaMovimiento3D();
+		}
+		else {
+			selectionH += 1;
+			if (selectionH >= Source::efectos.size())
+				selectionH = 0;
+			graficaPlayList();
+		}
 		break;
 	}
 	case ENTER: {
@@ -737,8 +818,9 @@ bool gestionaTeclas(int c) {
 			break;
 		}
 		case Source::EffectId::Move3DElemt: {
-			if (!playList[selectionV]->isPlaying())
-				playList[selectionV]->play();
+			subMenuActive = true;
+			stopPlaylist();
+			playList[selectionV]->play();
 			distance d = {
 				orientation::oNone, -5.0f, 0.0f, 0.0f
 			};
@@ -750,6 +832,8 @@ bool gestionaTeclas(int c) {
 			};
 			s->setSourcePos(sD);
 			graficaTableroElemental();
+			graficaStats();
+			graficaSubMenuMovimiento3D();
 			break;
 		}
 		default:
@@ -758,21 +842,94 @@ bool gestionaTeclas(int c) {
 		break;
 	}
 	case ADD: {
-		if ((selectionH == Source::EffectId::Play_Pause
+		
+		if (subMenuActive) {
+			switch (subMenu)
+			{
+			case Source::EffectIdSubMenu::ConeIn: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				std::tuple<float, float, float> t = s->getConeInfo();
+				float cone = std::get<0>(t) += 1.0f;
+				if (cone <= std::get<1>(t))
+					s->setSourceConeAngle(cone);
+				break;
+			}
+			case Source::EffectIdSubMenu::ConeOut: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				std::tuple<float, float, float> t = s->getConeInfo();
+				float cone = std::get<1>(t) += 1.0f;
+				if (cone >= std::get<0>(t))
+					s->setSourceConeAngle(-1.0f, cone);
+				break;
+			}
+			case Source::EffectIdSubMenu::ConeOrientation: {
+				break;
+			}
+			case Source::EffectIdSubMenu::ConeDistance: {
+				break;
+			}
+			default:
+				break;
+			}
+
+			muestraEfecto();
+
+		}
+		else if ((selectionH == Source::EffectId::Play_Pause
 			|| selectionH == Source::EffectId::Stop
 			|| selectionH == Source::EffectId::FadeOut
 			|| selectionH == Source::EffectId::FadeIn) == true) return true;
+		else
+		{
+			modificaEfecto(1.0f);
+		}
 
-		modificaEfecto(1.0f);
 		break;
 	}
 	case SUB: {
-		if ((selectionH == Source::EffectId::Play_Pause
+		if (subMenuActive) {
+			switch (subMenu)
+			{
+			case Source::EffectIdSubMenu::ConeIn: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				std::tuple<float, float, float> t = s->getConeInfo();
+				float cone = std::get<0>(t) -= 1.0f;
+				if(cone <= std::get<1>(t))
+					s->setSourceConeAngle(cone);
+				break;
+			}
+			case Source::EffectIdSubMenu::ConeOut: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				std::tuple<float, float, float> t = s->getConeInfo();
+				float cone = std::get<1>(t) -= 1.0f;
+				if (cone >= std::get<0>(t))
+					s->setSourceConeAngle(-1.0f,cone);
+				break;
+			}
+			case Source::EffectIdSubMenu::ConeOrientation: {
+				break;
+			}
+			case Source::EffectIdSubMenu::ConeDistance: {
+				break;
+			}
+			default:
+				break;
+			}
+			muestraEfecto();
+
+		}
+		else if ((selectionH == Source::EffectId::Play_Pause
 			|| selectionH == Source::EffectId::Stop
 			|| selectionH == Source::EffectId::FadeOut
 			|| selectionH == Source::EffectId::FadeIn) == true) return true;
+		else {
+			modificaEfecto(-1.0);
+		}
 
-		modificaEfecto(-1.0);
 		break;
 	}
 	case W: {
@@ -1227,7 +1384,7 @@ int main() {
 		Comp{ Source::FootStep , true, soundType::sound3D },
 	};
 	cargaSonidos(s);
-	grafica();
+	graficaPlayList();
 
 	bool run = true;
 	while (run)

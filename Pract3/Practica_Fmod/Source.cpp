@@ -28,3 +28,17 @@ std::vector<Source::Effect> Source::efectos{
 	{ FadeOut		,"FadeOut"},
 	{ Move3DElemt	,"Movimiento3D"},
 };
+
+std::vector<Source::PosEffectStruct> Source::posEfectos{
+	{MinDistance	,"Distancia min"},
+	{MaxDistance	,"Distancia max"},
+	{ConeI			,"Cono interior"},
+	{ConeO			,"Cono Exterior"},
+};
+
+std::vector<Source::SubMenuEffects> Source::subMenu{
+	{ConeIn				,"cambia angulo int"},
+	{ConeOut			,"Cambio angulo ext"},
+	{ConeOrientation	,"Cambio cono orient"},
+	{ConeDistance		,"Distancia del cono"},
+};
