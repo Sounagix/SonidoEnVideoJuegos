@@ -19,6 +19,7 @@ public:
 		RifleMod04,
 		Scooter,
 		Talking,
+		Siren,
 		Size
 	};
 
@@ -41,6 +42,7 @@ public:
 		ConeOrientation,
 		MinDistance3D,
 		MaxDistance3D,
+		Doppler,
 		SubSize
 	};
 

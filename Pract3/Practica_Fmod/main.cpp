@@ -10,6 +10,7 @@
 #include "Source.h"
 #include <vector>
 #include <iomanip>
+#include <windows.h>
 
 #pragma warning(disable : 4996)
 #define KEY_UP 72
@@ -115,6 +116,9 @@ const int MIN_WIDTH = -20;
 const int MAX_HEIGHT = 10;
 const int MIN_HEIGHT = -10;
 
+//Handle
+HANDLE console_color;
+
 
 void ERRCHECK(FMOD_RESULT result)
 {
@@ -145,9 +149,11 @@ protected:
 	//	Nombre del sonido
 	std::string nombre;
 	//	frame rate
-	float timeRate = 0.0f;
+	float timeRate = 0.7f;
 	//	tiempo actual
 	float currTime = 0.0f;
+	//
+	float lastTime = 0.0f;
 
 public:
 	//	Constructor generico
@@ -205,12 +211,12 @@ public:
 		canal->setPitch(value);
 	}
 
-	//	Cambia el frame rate de un sonido
-	void setFrameRate(float value) {
-		timeRate = value;
-	}
+	////	Cambia el frame rate de un sonido
+	//void setFrameRate(float value) {
+	//	timeRate = value;
+	//}
 
-	virtual void update(float deltaTime) = 0;
+	virtual bool update(float deltaTime) = 0;
 
 	//	Determina si un sonido se está reproduciendo
 	bool isPlaying() {
@@ -308,6 +314,11 @@ public:
 };
 
 class Sound3D : public BaseSound {
+private:
+	bool movActive = false;
+	float angleToRotate = 1.0f;
+	float oldDx = 0.0f;
+	float oldDz = 0.0f;
 public:
 	Sound3D(const char* ruta, std::string n = "undefined", bool loop = false) {
 
@@ -334,10 +345,6 @@ public:
 		ERRCHECK(res);
 		setSourceConeAngle(in, out, outGain);
 	}
-
-	virtual void update(float deltaTime) override {
-
-	};
 
 	//	Setea los conos correspondiente al canal
 	void setSourceConeAngle(float insCone = -1.0f, float outCone = -1.0f, float outSideVol = -1.0f) {
@@ -398,7 +405,6 @@ public:
 
 		canal->set3DAttributes(&pos, &vel);
 	}
-
 	//	Devuelve la posición del listener
 	FMOD_VECTOR getSourcePos() {
 		FMOD_VECTOR
@@ -441,6 +447,94 @@ public:
 		canal->get3DMinMaxDistance(&minDistance, &maxDistance);
 		return std::pair<float, float>(minDistance,maxDistance);
 	}
+
+	//	TODO faltan cositas
+	void rotateAround() {
+		angleToRotate += 25.0;
+		double radAngle = angleToRotate * (3.14159265359 / 180);
+
+		FMOD_VECTOR
+			listPos,
+			listVel,
+			forw,
+			up;
+
+		syst->get3DListenerAttributes(0, &listPos, &listVel, &forw, &up);
+		FMOD_VECTOR
+			sourcePos,
+			sourceVel;
+		canal->get3DAttributes(&sourcePos, &sourceVel);
+	
+
+		//int d = sqrt(powf((listPos.x - sourcePos.x),2) + powf((listPos.z - sourcePos.z), 2));
+
+		//float distToMoveX = sqrt(powf((listPos.x - sourcePos.x), 2)) / 2; //(listPos.x - sourcePos.x) / 2;
+		//float distToMoveY = sqrt(powf((listPos.z - sourcePos.z), 2)) / 2;//(listPos.z - sourcePos.z) / 2;
+
+		//float xP = distToMoveX * cos(radAngle) - distToMoveY * sin(radAngle);
+		//float yP = distToMoveY * sin(radAngle) + distToMoveX * cos(radAngle);
+
+		int xP = 5 * cos(radAngle) - 5 * sin(radAngle);
+		int yP = 5 * sin(radAngle) + 5 * cos(radAngle);
+
+
+		FMOD_VECTOR
+			posToMove = { xP ,0 ,yP };
+
+		canal->set3DAttributes(&posToMove, &sourceVel);
+	}
+
+	virtual bool update(float deltaTime) override {
+		//return true;
+		if (isPlaying()) {
+			FMOD_VECTOR
+				pos,
+				vel;
+			canal->get3DAttributes(&pos, &vel);
+			vel.x = getOrientation().x * 5;
+			vel.z = getOrientation().z * 5;
+			//vel.x = oldDx * deltaTime - lastTime;
+			//vel.z = oldDz * deltaTime - lastTime;
+			canal->set3DAttributes(&pos,&vel);
+			//oldDx = pos.x;
+			//oldDz = pos.z;
+		}
+		lastTime = deltaTime;
+		if (movActive && deltaTime - currTime >= timeRate) {
+			currTime = deltaTime;
+			rotateAround();
+			return false;
+		}
+		return true;
+	};
+
+	void activeMov() {
+		movActive = !movActive;
+	}
+
+	void setDopplerLevel(float value) {
+		float currLevel;
+		canal->get3DDopplerLevel(&currLevel);
+		currLevel += value;
+		if (currLevel >= 0 && currLevel < 6) {
+			FMOD_RESULT res = canal->set3DDopplerLevel(currLevel);
+			ERRCHECK(res);
+		}
+	}
+
+	float getDopplerLevel() {
+		float lvl;
+		canal->get3DDopplerLevel(&lvl);
+		return lvl;
+	}
+
+	FMOD_VECTOR getVelocity() {
+		FMOD_VECTOR
+			pos,
+			vel;
+		canal->get3DAttributes(&pos, &vel);
+		return vel;
+	}
 };
 
 class Sound2D : public BaseSound {
@@ -460,7 +554,7 @@ public:
 		std::cout << "2D\n";
 	};
 
-	virtual void update(float deltaTime) override {};
+	virtual bool update(float deltaTime) override { return true; };
 
 };
 
@@ -500,20 +594,9 @@ void setListenerPos(distance d) {
 		upD;
 
 	syst->get3DListenerAttributes(0, &pos, &vel, &forw, &upD);
-
-	d.x += pos.x;
-	d.y += pos.y;
-	d.z += pos.z;
-
-
-	FMOD_VECTOR
-		listenerPos = { d.x,d.y,d.z },// posicion del listener
-		listenerVel = { 0,0,0 },		// velocidad del listener
-		up = { 0,1,0 },					// vector up: hacia la ``coronilla''
-		at = { 1,0,0 };					// vector at: hacia donde mira
-	// colocamos listener
-
-	syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+	pos.x += d.x;
+	pos.z += d.z;
+	syst->set3DListenerAttributes(0, &pos, &vel, &forw, &upD);
 }
 
 //	Devuelve la posición del listener
@@ -549,26 +632,57 @@ void initListener() {
 	FMOD_VECTOR
 		listenerPos = { 0,0,0 },		// posicion del listener
 		listenerVel = { 0,0,0 },		// velocidad del listener
-		up = { 0, 1, 0 },				// vector up: hacia la ``coronilla''
-		at = { 0, 0, 1 };				// vector at: hacia donde mira
+		at = { 0, 0, 1 },				// vector at: hacia donde mira
+		up = { 0, 1, 0 };				// vector up: hacia la ``coronilla''
 	// colocamos listener
-	res = syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &up, &at);
+	res = syst->set3DListenerAttributes(0, &listenerPos, &listenerVel, &at, &up);
 	ERRCHECK(res);
 }
 
 //	Imprime los valores que se muestran debajo del grid de puntos
 void graficaStats() {
 	Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
-	std::cout << "Listener(L): asdw    ";
-	std::cout << "Source(S): jkli	";
+	SetConsoleTextAttribute(console_color, 9);
+
+	std::cout << "Listener(L): asdw " << (int)getListenerPos().x << "," << (int)getListenerPos().z << "   ";
+	std::cout << "Source(S): jkli "<< (int)s->getSourcePos().x << "," << (int)s->getSourcePos().z << "   ";
 	std::cout << "Orientacion: 8624 " << s->getOrientation().x << "," << s->getOrientation().z << "  ";
+	std::cout << "Vel:  " << s->getVelocity().x << "," << s->getVelocity().z << "  ";
+	
+	SetConsoleTextAttribute(console_color, 7);
 	std::cout << "x symemetry	";
 	std::cout << "1-2: reverbs	 ";
 	std::cout << "z exit \n";
+
+	if (subMenu == Source::EffectIdSubMenu::MinDistance3D) {
+		SetConsoleTextAttribute(console_color, 12);
+	}
 	std::cout << "minD:	" << s->getDistance().first << "  ";
+	SetConsoleTextAttribute(console_color, 7);
+
+	if (subMenu == Source::EffectIdSubMenu::MaxDistance3D) {
+		SetConsoleTextAttribute(console_color, 12);
+	}
 	std::cout << "maxD: " << s->getDistance().second <<"  ";
+	SetConsoleTextAttribute(console_color, 7);
+	
+	if (subMenu == Source::EffectIdSubMenu::ConeIn) {
+		SetConsoleTextAttribute(console_color, 12);
+	}
 	std::cout << "ConeI: " << std::get<0>(s->getConeInfo()) << "   ";
-	std::cout << "ConeO: " << std::get<1>(s->getConeInfo()) << " \n";
+	SetConsoleTextAttribute(console_color, 7);
+
+	if (subMenu == Source::EffectIdSubMenu::ConeOut) {
+		SetConsoleTextAttribute(console_color, 12);
+	}
+	std::cout << "ConeO: " << std::get<1>(s->getConeInfo()) << "   ";
+	SetConsoleTextAttribute(console_color, 7);
+
+	if (subMenu == Source::EffectIdSubMenu::Doppler) {
+		SetConsoleTextAttribute(console_color, 12);
+	}
+	std::cout << "Doppler: " << s->getDopplerLevel() << " \n";
+	SetConsoleTextAttribute(console_color, 7);
 
 }
 
@@ -579,7 +693,9 @@ void graficaPlayList() {
 	int s = playList.size();
 	for (int i = 0; i < s; i++) {
 		if (i == selectionV) {
+			SetConsoleTextAttribute(console_color, 12);
 			std::cout << ">" << playList.at(i)->getName();
+			SetConsoleTextAttribute(console_color, 7);
 			std::cout << "  ";
 			elapsedTime(playList.at(i)->getTime());
 			std::cout << "\n";
@@ -591,8 +707,11 @@ void graficaPlayList() {
 	std::cout << "\n\n\n\n";
 	for (size_t i = 0; i < Source::efectos.size(); i++)
 	{
-		if (i == selectionH)
+		if (i == selectionH) {
+			SetConsoleTextAttribute(console_color, 12);
 			std::cout << ">" << Source::efectos[i].name << "   ";
+			SetConsoleTextAttribute(console_color, 7);
+		}
 		else
 			std::cout << Source::efectos[i].name << "   ";
 
@@ -641,7 +760,7 @@ void graficaTableroElemental() {
 
 	for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
 		for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
-			if (lPos.x == x && lPos.z == y) {
+			if ((int)lPos.x == y && (int)lPos.z == x) {
 				std::cout << "L ";
 			}
 			else if ((int)SPos.x == y && (int)SPos.z == x) {
@@ -678,11 +797,13 @@ void graficaTableroElemental() {
 void graficaSubMenuMovimiento3D() {
 	for (int i = 0; i < Source::subMenu.size(); i++) {
 		if (i == subMenu) {
-			std::cout << ">" << Source::subMenu[subMenu].name << "  ";
+			SetConsoleTextAttribute(console_color, 12);
+			std::cout << ">" << (Source::subMenu[subMenu].name) << "  ";
+			SetConsoleTextAttribute(console_color, 7);
 		}
 		else
 		{
-			std::cout << Source::subMenu[subMenu].name << "  ";
+			std::cout << Source::subMenu[i].name << "  ";
 		}
 	}
 	std::cout << "\n";
@@ -786,7 +907,7 @@ void modificaEfecto(float value, distance* d = nullptr, movType t = movType::mNo
 		switch (t)
 		{
 		case listener: {
-			setListenerPos(*d);
+			setListenerPos(*d); 
 			break;
 		}
 		case source: {
@@ -943,14 +1064,15 @@ bool gestionaTeclas(int c) {
 			subMenuActive = true;
 			stopPlaylist();
 			playList[selectionV]->play();
-			distance d = {
-				orientation::oNone, -5.0f, 0.0f, 0.0f
-			};
-			setListenerPos(d);
+			//distance d = {
+			//	orientation::oNone, -5.0f, 0.0f, 0.0f
+			//};
+			//setListenerPos(d);
 			Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
 			if (s == nullptr) ERRCHECK(FMOD_RESULT::FMOD_ERR_DSP_INUSE);
+			s->activeMov();
 			distance sD = {
-				orientation::oNone, 0.0f, 0.0f, 5.0f
+				orientation::oNone, 0.0f, 0.0f, 10.0f
 			};
 			s->setSourcePos(sD);
 			graficaTableroElemental();
@@ -996,6 +1118,12 @@ bool gestionaTeclas(int c) {
 				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
 				if (s == nullptr) return true;
 				s->setDistance(s->getDistance().first, s->getDistance().second + 1.0f);
+				break;
+			}
+			case Source::EffectIdSubMenu::Doppler: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				s->setDopplerLevel(1.0f);
 				break;
 			}
 			default:
@@ -1048,6 +1176,12 @@ bool gestionaTeclas(int c) {
 				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
 				if (s == nullptr) return true;
 				s->setDistance(s->getDistance().first - 1.0f, s->getDistance().second);
+				break;
+			}
+			case Source::EffectIdSubMenu::Doppler: {
+				Sound3D* s = dynamic_cast<Sound3D*>(playList[selectionV]);
+				if (s == nullptr) return true;
+				s->setDopplerLevel(-1.0f);
 				break;
 			}
 			default:
@@ -1262,6 +1396,7 @@ int main() {
 		ERRCHECK(res);
 	}
 	initListener();
+	console_color = GetStdHandle(STD_OUTPUT_HANDLE);
 
 #pragma region Practica3
 #pragma region Apartado1
@@ -1515,18 +1650,24 @@ int main() {
 
 #pragma region Apartado1
 	std::vector<Comp> s = {
-		Comp{ Source::FootStep , true, soundType::sound3D },
+		Comp{ Source::RutaId::Siren , true, soundType::sound3D },
 	};
 	cargaSonidos(s);
 	graficaPlayList();
 
 	bool run = true;
+	auto start = std::chrono::system_clock::now();
 	while (run)
 	{
+		auto end = std::chrono::system_clock::now();
 		if (_kbhit()) {
 			int c;
 			run = gestionaTeclas((c = getch()));
 		}
+		std::chrono::duration<double> elapsed_seconds = end - start;
+		std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+		if (!playList[selectionV]->update(elapsed_seconds.count()))
+			graficaMovimiento3D();
 		syst->update();
 	}
 #pragma endregion
