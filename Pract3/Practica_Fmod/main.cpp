@@ -11,6 +11,7 @@
 #include <vector>
 #include <iomanip>
 #include <windows.h>
+#include <list>
 
 #pragma warning(disable : 4996)
 #define KEY_UP 72
@@ -51,6 +52,7 @@ using namespace FMOD;
 System* syst;
 
 class BaseSound;
+class Wall;
 
 enum soundType
 {
@@ -97,6 +99,12 @@ struct Comp
 };
 
 
+struct WallComp
+{
+	int nummaxPoligons, maxVertices, x, z;
+};
+
+
 
 //	Lista de todos los sonidos cargados
 std::vector<BaseSound*> playList;
@@ -118,6 +126,9 @@ const int MIN_HEIGHT = -10;
 
 //Handle
 HANDLE console_color;
+
+std::vector<Wall*> muros;
+
 
 
 void ERRCHECK(FMOD_RESULT result)
@@ -319,6 +330,7 @@ private:
 	float angleToRotate = 1.0f;
 	float oldDx = 0.0f;
 	float oldDz = 0.0f;
+	FMOD_VECTOR lastPos;
 public:
 	Sound3D(const char* ruta, std::string n = "undefined", bool loop = false) {
 
@@ -396,13 +408,13 @@ public:
 		FMOD_VECTOR
 			pos,
 			vel;
-
 		canal->get3DAttributes(&pos, &vel);
-
+		lastPos.x = pos.x;
+		lastPos.y = pos.y;
+		lastPos.z = pos.z;
 		pos.x += d.x;
 		pos.y = 0.0f;
 		pos.z += d.z;
-
 		canal->set3DAttributes(&pos, &vel);
 	}
 	//	Devuelve la posición del listener
@@ -491,13 +503,11 @@ public:
 				pos,
 				vel;
 			canal->get3DAttributes(&pos, &vel);
-			vel.x = getOrientation().x * 5;
-			vel.z = getOrientation().z * 5;
-			//vel.x = oldDx * deltaTime - lastTime;
-			//vel.z = oldDz * deltaTime - lastTime;
+
+			vel.x = (pos.x - lastPos.x) / deltaTime;
+			vel.y = (pos.y - lastPos.y) / deltaTime;
+			vel.z = (pos.z - lastPos.z) / deltaTime;
 			canal->set3DAttributes(&pos,&vel);
-			//oldDx = pos.x;
-			//oldDz = pos.z;
 		}
 		lastTime = deltaTime;
 		if (movActive && deltaTime - currTime >= timeRate) {
@@ -555,7 +565,50 @@ public:
 	};
 
 	virtual bool update(float deltaTime) override { return true; };
+};
 
+//	TODO
+class Reverb {
+private:
+	Reverb* reverb;
+public:
+	Reverb() {
+
+	}
+};
+
+class Wall {
+
+private:
+	Geometry* geo;
+public:
+	FMOD_VECTOR geoPos;
+
+	Wall(int maxPoligons,int maxVertices){
+		FMOD_RESULT res;
+		res = syst->createGeometry(maxPoligons, maxVertices, &geo);
+		ERRCHECK(res);
+		muros.push_back(this);
+	};
+
+	void translate(FMOD_VECTOR newPos) {
+		FMOD_VECTOR
+			pos;
+		geo->getPosition(&pos);
+
+		pos.x += newPos.x;
+		pos.y += newPos.y;
+		pos.z += newPos.z;
+
+		geoPos = pos;
+
+		geo->setPosition(&geoPos);
+	}
+
+	void setPosition(FMOD_VECTOR newPos) {
+		geoPos = newPos;
+		geo->setPosition(&geoPos);
+	}
 };
 
 orientation toOrientation(FMOD_VECTOR v) {
@@ -760,6 +813,14 @@ void graficaTableroElemental() {
 
 	for (int x = MIN_HEIGHT; x < MAX_HEIGHT; x++) {
 		for (int y = MIN_WIDTH; y < MAX_WIDTH; y++) {
+
+			if (!muros.empty()) {
+				for (int i = 0; i < muros.size(); i++) {
+					if ((int)muros[i]->geoPos.x == y && (int)muros[i]->geoPos.z == x) {
+						std::cout << "=";
+					}
+				}
+			}
 			if ((int)lPos.x == y && (int)lPos.z == x) {
 				std::cout << "L ";
 			}
@@ -1358,6 +1419,15 @@ bool gestionaTeclas(int c) {
 	return true;
 }
 
+void cargaMuros(const std::vector<WallComp> t) {
+	for (int i = 0; i < t.size(); i++) {
+		Wall* currWall = new Wall(t.at(i).nummaxPoligons, t.at(i).maxVertices);
+		FMOD_VECTOR
+			pos = { t[i].x,0,t[i].z };
+		currWall->setPosition(pos);
+	}
+}
+
 void cargaSonidos(const std::vector<Comp> s) {
 	for (int i = 0; i < s.size(); i++) {
 		switch (s[i].sT)
@@ -1649,10 +1719,21 @@ int main() {
 #pragma region Practica4
 
 #pragma region Apartado1
+	//	PlayList
 	std::vector<Comp> s = {
 		Comp{ Source::RutaId::Siren , true, soundType::sound3D },
 	};
+
+	//	Los muros
+	std::vector<WallComp> t = {
+		WallComp{1,10,-5,0},
+		WallComp{1,10,-4,0},
+		WallComp{1,10,-3,0},
+		WallComp{1,10,-2,0},
+	};
+
 	cargaSonidos(s);
+	cargaMuros(t);
 	graficaPlayList();
 
 	bool run = true;

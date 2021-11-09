@@ -1,1 +1,33 @@
-﻿
+﻿  main.cpp
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(489,10): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(490,10): warning C4244: 'inicializando': conversión de 'double' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(494,18): warning C4838: la conversión de 'int' en 'float' requiere una conversión de restricción
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(494,18): warning C4244: 'inicializando': conversión de 'int' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(494,25): warning C4838: la conversión de 'int' en 'float' requiere una conversión de restricción
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(494,25): warning C4244: 'inicializando': conversión de 'int' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(666,11): warning C4244: '=': conversión de 'float' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(667,11): warning C4244: '=': conversión de 'float' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(736,25): warning C4267: 'inicializando': conversión de 'size_t' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(893,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(906,12): warning C4244: 'inicializando': conversión de 'float' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(995,36): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1003,41): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1011,44): warning C4267: '=': conversión de 'size_t' a 'int'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1360,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1366,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1372,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1378,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1385,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1391,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1396,33): warning C4244: 'argumento': conversión de 'double' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1416,16): warning C4838: la conversión de 'const int' en 'float' requiere una conversión de restricción
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1416,16): warning C4244: 'inicializando': conversión de 'const int' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1416,25): warning C4838: la conversión de 'const int' en 'float' requiere una conversión de restricción
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1416,25): warning C4244: 'inicializando': conversión de 'const int' a 'float'; posible pérdida de datos
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(1739,58): warning C4244: 'argumento': conversión de '_Rep' a 'float'; posible pérdida de datos
+          with
+          [
+              _Rep=double
+          ]
+G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Practica_Fmod\main.cpp(290): warning C4715: 'BaseSound::getEfect': no todas las rutas de acceso de control devuelven un valor
+  Practica_Fmod.vcxproj -> G:\4to\SONIDO\Practicas\SonidoEnVideoJuegos\Pract3\Exes\Practica_Fmod.exe
